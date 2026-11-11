@@ -60,7 +60,7 @@ Hợp đồng dữ liệu (backend phải trả đúng hình dạng này): `fron
 - Quy tắc đã cài và có test: gửi lại review không sinh trùng (giữ bản thấy đầu, kể cả giữa lượt vi/en); cào lại không xóa công ty đã gán
   hay lĩnh vực/nhãn sửa tay; cả đợt review bị từ chối nếu một phần tử sai; app chưa gán công ty Việt bị ẩn trừ khi `?include_foreign=1`
   (khi đó `companyId = "dev:<play_developer_id>"`); dashboard chỉ có app đã có lĩnh vực + review đã gắn nhãn.
-- Hạn chế đã biết: gắn nhãn từ khóa không hiểu phủ định ("không có quảng cáo" vẫn ra `ads`); bỏ dấu làm "lỗi"/"lời" trùng nhau;
+- Hạn chế đã biết: gắn nhãn từ khóa không hiểu phủ định ("không có quảng cáo" vẫn ra `ads`); review gõ có dấu được so có dấu (tránh "do"="đơ", "chấm"="chậm"), review gõ không dấu thì vẫn có thể nhầm;
   hai request review giống hệt chạy cùng lúc có thể trả 500 (extension gửi tuần tự nên chưa xử lý).
 - Thử Windows Git Bash: `curl -d` có tiếng Việt bị sai mã hóa → ghi JSON ra file UTF-8 rồi `--data-binary @file.json`.
 
@@ -77,7 +77,7 @@ Hợp đồng dữ liệu (backend phải trả đúng hình dạng này): `fron
 ## 5. Việc còn dang dở / câu hỏi mở
 1. ~~3 thanh trượt khó hiểu~~ → ĐÃ XONG (xem mục 3). Ý tưởng để ngỏ nếu cần: chỉ xếp hạng lĩnh vực có lượt tải ≥ ngưỡng (vd 10 Tr).
 2. ~~Toàn cầu hay Việt Nam~~ → ĐÃ CHỐT: cào cả hai lượt vi + en.
-3. ~~Backend theo đợt~~ → ĐÃ XONG đợt 1–4 (xem mục 3b). Còn: review toàn nhánh bởi reviewer độc lập, rồi merge vào `master`.
+3. ~~Backend theo đợt~~ → ĐÃ XONG đợt 1–4 (xem mục 3b). Đã review toàn nhánh (reviewer độc lập) và sửa 2 lỗi C1/I1; 8 lỗi nhỏ để ngỏ trong sổ tiến độ. Còn: merge vào `master`.
    Sổ tiến độ (không commit): `.superpowers/sdd/2026-11-11-backend-django/progress.md` — các "Ruling" đã quyết.
 4. **Việc tiếp theo**: kế hoạch riêng cho **extension Chrome** (bước 0: khảo sát DOM Google Play bằng tay), rồi nối frontend
    (`lib/dataSource.ts` gọi `/api/dashboard/`), rồi gắn nhãn LLM.

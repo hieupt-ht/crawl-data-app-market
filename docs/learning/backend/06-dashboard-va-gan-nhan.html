@@ -153,7 +153,7 @@ for review_id, pain_point_id in links:
 </div>
 
 <div class="concept">
-<h3>3.4. Chuẩn hóa chữ: bỏ dấu tiếng Việt bằng Unicode NFD</h3>
+<h3>3.4. Chuẩn hóa chữ: bỏ dấu tiếng Việt bằng Unicode NFD (và khi nào KHÔNG nên bỏ)</h3>
 <p>Người dùng gõ “QUANG CAO QUA NHIEU”, từ khóa là “quảng cáo”. Để so được, đưa cả hai về cùng dạng: chữ thường, không dấu.
 Mẹo: dạng Unicode <b>NFD</b> tách “ả” thành “a” + “dấu hỏi” (một ký tự “combining” riêng). Bỏ các ký tự combining là hết dấu.
 Riêng “đ” là một chữ riêng, không tách được, nên đổi tay.</p>
@@ -165,7 +165,15 @@ Riêng “đ” là một chữ riêng, không tách được, nên đổi tay.<
     return " ".join(without_marks.split())   # gộp mọi khoảng trắng / xuống dòng thành 1 dấu cách
 
 normalize("  Quảng   CÁO  Đầy\nmàn hình ")  # → "quang cao day man hinh"</code></pre>
-<p class="pitfall"><b>Lỗi hay gặp:</b> bỏ dấu làm từ khác nghĩa trùng nhau: “lỗi” và “lời” đều thành “loi”, “văng” và “vàng” đều thành “vang”. Đây là cái giá của việc khớp được chữ không dấu.</p>
+<p class="pitfall"><b>Lỗi hay gặp — và đã dính thật:</b> nếu lúc nào cũng bỏ dấu thì từ khác nghĩa thành một: “do” = “đơ”, “chấm” = “chậm”,
+“rồi” = “rối”, “mở” = “mờ”. Câu “Mình chấm 1 sao vì quảng cáo” bị gắn thêm nhãn “Chậm”. Reviewer cuối nhánh phát hiện, và cách sửa là:</p>
+<p class="file">market/labeling/text.py — contains_keyword</p>
+<pre><code>if has_diacritics(prepared_text):          # người viết gõ có dấu → so CÓ dấu
+    prepared_keyword = fold_case(keyword)  # "chậm" ≠ "chấm"
+else:                                       # gõ không dấu → đành bỏ dấu cả từ khóa
+    prepared_keyword = normalize(keyword)  # "cham qua" vẫn khớp "chậm"</code></pre>
+<p>Review gõ không dấu thì vẫn có thể nhầm (“toi go app do qc” → “đơ”), nhưng đó là số ít. Bài học: khi viết test, ngoài câu
+<b>phải khớp</b> hãy viết cả câu <b>không được khớp</b> bằng tiếng Việt đời thường (xem các test <code>test_seed_*</code> trong <code>tests/test_labeling.py</code>).</p>
 </div>
 
 <div class="concept">
