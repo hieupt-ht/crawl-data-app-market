@@ -4,7 +4,9 @@ Dashboard tìm lĩnh vực app nên làm, dựa trên review 1–2★ của các
 của studio Việt Nam trên Google Play.
 
 - `frontend/` — Next.js 16 (App Router) + TypeScript + Tailwind v4 + ECharts. Hiện dùng dữ liệu giả (`src/data/mockData.ts`).
-- `backend/` — Django + DRF + SQLite: nhận dữ liệu cào từ extension Chrome, gắn nhãn, trả `/api/dashboard/` (đang làm, nhánh `feat/backend-django`).
+- `backend/` — Django 5.2 + DRF + SQLite: API nhận dữ liệu cào từ extension Chrome, gắn nhãn bằng từ khóa
+  (`manage.py label_data`), trả `/api/dashboard/` đúng `DashboardData`. Cách chạy và bảng API: `backend/README.md`.
+- Extension Chrome cào Google Play — chưa làm (kế hoạch riêng).
 - `docs/learning/` — bài tổng hợp kiến thức sau mỗi phiên làm việc, chia `frontend/` và `backend/`; mục lục ở `index.html`.
 - `docs/HANDOFF.md` — tóm tắt bối cảnh, quyết định đã chốt và việc còn dang dở. Đọc file này khi bắt đầu chat mới.
 

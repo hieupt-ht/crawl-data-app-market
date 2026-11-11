@@ -1,4 +1,4 @@
-# Bàn giao bối cảnh — App Opportunity Finder (cập nhật 11/11/2026)
+# Bàn giao bối cảnh — App Opportunity Finder (cập nhật 11/11/2026, backend xong)
 
 File này tóm tắt các phiên chat trước để chat mới nắm được bối cảnh. Đọc cùng `CLAUDE.md`.
 
@@ -51,10 +51,23 @@ Hợp đồng dữ liệu (backend phải trả đúng hình dạng này): `fron
   `text-xs` = 13px. Quy tắc: mọi chữ ≥ 4,5:1 so với nền thật, không chữ nào < 12px.
   Script kiểm tra tương phản (puppeteer, ngoài repo) đã chạy: 0 lỗi trên Overview, Overview khi chọn lĩnh vực, trang app.
 
+## 3b. Backend đã làm xong (nhánh `feat/backend-django`)
+- Cách chạy, bảng API, lệnh: **`backend/README.md`**. Bài học: `docs/learning/backend/04`, `05`, `06`.
+- Một Django app `market`: `models.py` (9 bảng), `api/` (serializer + view mỏng), `services/` (ingest, crawl_runs, dashboard, labeling),
+  `labeling/` (hàm thuần gắn nhãn từ khóa — chỗ sau này thay bằng LLM), `management/commands/` (`label_data`, `sample_labels`).
+- Luồng: extension `POST /api/crawl-runs/` → `/api/ingest/app/` → `GET /api/crawl-state/` → `/api/ingest/reviews/` (≤100/đợt)
+  → `PATCH /api/crawl-runs/<id>/`; rồi chạy `manage.py label_data`; Next.js đọc `GET /api/dashboard/`.
+- Quy tắc đã cài và có test: gửi lại review không sinh trùng (giữ bản thấy đầu, kể cả giữa lượt vi/en); cào lại không xóa công ty đã gán
+  hay lĩnh vực/nhãn sửa tay; cả đợt review bị từ chối nếu một phần tử sai; app chưa gán công ty Việt bị ẩn trừ khi `?include_foreign=1`
+  (khi đó `companyId = "dev:<play_developer_id>"`); dashboard chỉ có app đã có lĩnh vực + review đã gắn nhãn.
+- Hạn chế đã biết: gắn nhãn từ khóa không hiểu phủ định ("không có quảng cáo" vẫn ra `ads`); bỏ dấu làm "lỗi"/"lời" trùng nhau;
+  hai request review giống hệt chạy cùng lúc có thể trả 500 (extension gửi tuần tự nên chưa xử lý).
+- Thử Windows Git Bash: `curl -d` có tiếng Việt bị sai mã hóa → ghi JSON ra file UTF-8 rồi `--data-binary @file.json`.
+
 ## 4. Quy ước
 - Skill dự án trong `.claude/skills/`: `readable-code` (khi viết code) và `learning-notes` (cuối phiên có sửa code → viết `docs/learning/frontend/NN-*.html` hoặc `docs/learning/backend/NN-*.html` + cập nhật `index.html`; số bài đánh liên tục giữa hai thư mục).
 - Đã có bài học: `frontend/01-dashboard-overview.html`, `frontend/02-trang-chi-tiet-app.html`, `frontend/03-bo-thanh-truot-trong-so.html`,
-  `backend/04-khung-django-va-models.html`, `backend/05-api-nhan-du-lieu-cao.html`, `backend/06-dashboard-va-gan-nhan.html`. Mỗi đợt backend xong viết 1 bài (đợt 2 → bài 05).
+  `backend/04-khung-django-va-models.html`, `backend/05-api-nhan-du-lieu-cao.html`, `backend/06-dashboard-va-gan-nhan.html`. Mỗi đợt backend có code viết 1 bài.
 - Kiểm tra frontend: `cd frontend && npx tsc --noEmit && npm run lint && npm run build`.
 - Kiểm tra backend: `cd backend && .venv/Scripts/python -m pytest && .venv/Scripts/python manage.py check`.
 - Git: repo ở thư mục gốc (đã chuyển từ `frontend/`). `master` = frontend; backend làm trên nhánh **`feat/backend-django`**. Chưa có remote GitHub.
@@ -64,17 +77,9 @@ Hợp đồng dữ liệu (backend phải trả đúng hình dạng này): `fron
 ## 5. Việc còn dang dở / câu hỏi mở
 1. ~~3 thanh trượt khó hiểu~~ → ĐÃ XONG (xem mục 3). Ý tưởng để ngỏ nếu cần: chỉ xếp hạng lĩnh vực có lượt tải ≥ ngưỡng (vd 10 Tr).
 2. ~~Toàn cầu hay Việt Nam~~ → ĐÃ CHỐT: cào cả hai lượt vi + en.
-3. **Backend đang làm theo đợt** (người dùng muốn dừng sau mỗi đợt để xem):
-   - ✅ Đợt 1 = Task 1–2: khung Django, `/api/health/`, 9 model, nạp bộ nhãn bằng data migration, admin, 13 test xanh.
-   - ✅ Đợt 2 = Task 3–5: `/api/companies/`, `/api/developer-accounts/` (GET + POST gán công ty), `/api/crawl-runs/` (POST + PATCH),
-     `/api/ingest/app/`, `/api/crawl-state/`, `/api/ingest/reviews/` (≤100/đợt, chống trùng, lỗi tiếng Việt "Review thứ N"). 57 test xanh.
-     Logic ghi ở `market/services/ingest.py` + `crawl_runs.py`. Bài học 05.
-   - ✅ Đợt 3 = Task 6–8: `/api/dashboard/` (đúng `DashboardData`, `?include_foreign=1`, app chưa gán công ty có `companyId = "dev:<id>"`),
-     gắn nhãn từ khóa (`market/labeling/`, hàm thuần), lệnh `label_data [--relabel]` và `sample_labels [--n 50] [--seed 0]`. 90 test xanh.
-     Đã thử tay cả đường đi bằng curl: ingest → label_data → dashboard. Bài học 06.
-   - ⏭ **Đợt 4 = Task 9**: cập nhật tài liệu. Sau cùng: review toàn nhánh bởi reviewer độc lập.
-   - Sổ tiến độ (không commit): `.superpowers/sdd/2026-11-11-backend-django/progress.md` — ghi task đã xong + các "Ruling".
-4. Sau backend: kế hoạch riêng cho **extension Chrome** (bước 0: khảo sát DOM Google Play bằng tay), rồi nối frontend
+3. ~~Backend theo đợt~~ → ĐÃ XONG đợt 1–4 (xem mục 3b). Còn: review toàn nhánh bởi reviewer độc lập, rồi merge vào `master`.
+   Sổ tiến độ (không commit): `.superpowers/sdd/2026-11-11-backend-django/progress.md` — các "Ruling" đã quyết.
+4. **Việc tiếp theo**: kế hoạch riêng cho **extension Chrome** (bước 0: khảo sát DOM Google Play bằng tay), rồi nối frontend
    (`lib/dataSource.ts` gọi `/api/dashboard/`), rồi gắn nhãn LLM.
 5. Hạn chế đã biết: `/apps/id-sai` hiện giao diện 404 nhưng mã HTTP vẫn 200 (giới hạn của Next 16 khi bật Cache Components).
 6. File `package-lock.json` rỗng ở thư mục gốc là rác, xóa được.

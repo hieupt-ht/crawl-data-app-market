@@ -24,6 +24,35 @@ python -m venv .venv                                   # tạo môi trường �
 - Trang quản trị: http://localhost:8000/admin/
 - Kiểm tra backend đang chạy: http://localhost:8000/api/health/
 
+Sau mỗi lần cào bằng extension:
+
+```bash
+.venv/Scripts/python manage.py label_data              # gắn nhãn app/review chưa gắn, in app chưa khớp lĩnh vực
+.venv/Scripts/python manage.py label_data --relabel    # gắn lại tất cả (vd sau khi sửa từ khóa trong admin); nhãn sửa tay được giữ
+.venv/Scripts/python manage.py sample_labels --n 50    # in 50 review ngẫu nhiên để chấm đúng/sai (mục tiêu ≥ 70%)
+```
+
+Xem dữ liệu dashboard: http://localhost:8000/api/dashboard/ (thêm `?include_foreign=1` để thấy cả app
+của tài khoản chưa gán công ty hoặc không phải studio Việt).
+
+## Các API
+
+| Method | Đường dẫn | Ai gọi | Việc |
+|---|---|---|---|
+| GET | `/api/health/` | extension | Django đã bật chưa |
+| GET | `/api/companies/` | extension | Danh sách công ty cho popup chọn |
+| GET | `/api/developer-accounts/<id>/` | extension | Tài khoản developer đã gán công ty chưa (404 nếu chưa biết) |
+| POST | `/api/developer-accounts/` | extension | Gán tài khoản: `company_id` \| `new_company_name` \| `foreign: true` (đúng một) |
+| POST | `/api/crawl-runs/` | extension | Mở lần cào → `{"id"}` |
+| PATCH | `/api/crawl-runs/<id>/` | extension | Gửi `stats`, `errors`, `finished: true` |
+| POST | `/api/ingest/app/` | extension | Gửi thông tin app (`star_histogram` hoặc `star_percentages`) |
+| GET | `/api/crawl-state/?app_id=&lang=&score=` | extension | Review mới nhất đã lưu → biết khi nào dừng cuộn |
+| POST | `/api/ingest/reviews/` | extension | Gửi ≤ 100 review/đợt; trả `created`, `duplicates` |
+| GET | `/api/dashboard/` | Next.js | Dữ liệu đúng hình dạng `DashboardData` (`frontend/src/lib/types.ts`) |
+
+API dashboard dùng tên trường camelCase như `types.ts`; các API còn lại dùng snake_case.
+Dữ liệu sai thì trả `400` kèm thông báo tiếng Việt, vd `"Review thứ 3 – score: score phải là 1 hoặc 2 (đang là 4)."`.
+
 ## Chạy test
 
 ```bash
@@ -37,7 +66,7 @@ python -m venv .venv                                   # tạo môi trường �
 | `config/` | Cấu hình Django (settings, đường dẫn gốc) |
 | `market/models.py` | Các bảng dữ liệu: công ty, tài khoản developer, app, review, nhãn |
 | `market/api/` | Các API cho extension và dashboard |
-| `market/services/` | Logic xử lý dữ liệu (hàm thuần, dễ test) |
-| `market/labeling/` | Gắn nhãn pain point / lĩnh vực bằng từ khóa |
-| `market/management/commands/` | Lệnh chạy tay, vd `label_data` |
+| `market/services/` | Logic xử lý dữ liệu: nhận dữ liệu cào (`ingest.py`), dựng dashboard (`dashboard.py`), chạy gắn nhãn (`labeling.py`) |
+| `market/labeling/` | Gắn nhãn pain point / lĩnh vực bằng từ khóa (hàm thuần, không đọc database) |
+| `market/management/commands/` | Lệnh chạy tay: `label_data`, `sample_labels` |
 | `tests/` | Test tự động (pytest) |
