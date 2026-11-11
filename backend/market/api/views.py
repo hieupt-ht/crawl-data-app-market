@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from market.models import Company, CrawlRun, DeveloperAccount
 from market.services.crawl_runs import get_crawl_state, update_crawl_run
+from market.services.dashboard import build_dashboard_data
 from market.services.ingest import add_reviews, upsert_app
 from market.services.scope import is_in_scope
 
@@ -134,3 +135,15 @@ def ingest_reviews(request: Request) -> Response:
     data = serializer.validated_data
     created, duplicates = add_reviews(data["app"], data["lang"], data["reviews"])
     return Response({"created": created, "duplicates": duplicates})
+
+
+# ---------------------------------------------------------------------------
+# Dashboard (Next.js gọi)
+# ---------------------------------------------------------------------------
+
+
+@api_view(["GET"])
+def dashboard(request: Request) -> Response:
+    """Toàn bộ dữ liệu cho dashboard, đúng hình dạng DashboardData. `?include_foreign=1` để thêm app nước ngoài."""
+    include_foreign = request.query_params.get("include_foreign") == "1"
+    return Response(build_dashboard_data(include_foreign=include_foreign))

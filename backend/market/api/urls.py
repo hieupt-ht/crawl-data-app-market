@@ -20,4 +20,6 @@ urlpatterns = [
     path("crawl-state/", views.crawl_state, name="crawl-state"),
     path("ingest/app/", views.ingest_app, name="ingest-app"),
     path("ingest/reviews/", views.ingest_reviews, name="ingest-reviews"),
+    # Dashboard
+    path("dashboard/", views.dashboard, name="dashboard"),
 ]
