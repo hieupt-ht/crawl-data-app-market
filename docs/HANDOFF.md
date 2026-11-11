@@ -54,7 +54,7 @@ Hợp đồng dữ liệu (backend phải trả đúng hình dạng này): `fron
 ## 4. Quy ước
 - Skill dự án trong `.claude/skills/`: `readable-code` (khi viết code) và `learning-notes` (cuối phiên có sửa code → viết `docs/learning/frontend/NN-*.html` hoặc `docs/learning/backend/NN-*.html` + cập nhật `index.html`; số bài đánh liên tục giữa hai thư mục).
 - Đã có bài học: `frontend/01-dashboard-overview.html`, `frontend/02-trang-chi-tiet-app.html`, `frontend/03-bo-thanh-truot-trong-so.html`,
-  `backend/04-khung-django-va-models.html`, `backend/05-api-nhan-du-lieu-cao.html`. Mỗi đợt backend xong viết 1 bài (đợt 2 → bài 05).
+  `backend/04-khung-django-va-models.html`, `backend/05-api-nhan-du-lieu-cao.html`, `backend/06-dashboard-va-gan-nhan.html`. Mỗi đợt backend xong viết 1 bài (đợt 2 → bài 05).
 - Kiểm tra frontend: `cd frontend && npx tsc --noEmit && npm run lint && npm run build`.
 - Kiểm tra backend: `cd backend && .venv/Scripts/python -m pytest && .venv/Scripts/python manage.py check`.
 - Git: repo ở thư mục gốc (đã chuyển từ `frontend/`). `master` = frontend; backend làm trên nhánh **`feat/backend-django`**. Chưa có remote GitHub.
@@ -69,8 +69,10 @@ Hợp đồng dữ liệu (backend phải trả đúng hình dạng này): `fron
    - ✅ Đợt 2 = Task 3–5: `/api/companies/`, `/api/developer-accounts/` (GET + POST gán công ty), `/api/crawl-runs/` (POST + PATCH),
      `/api/ingest/app/`, `/api/crawl-state/`, `/api/ingest/reviews/` (≤100/đợt, chống trùng, lỗi tiếng Việt "Review thứ N"). 57 test xanh.
      Logic ghi ở `market/services/ingest.py` + `crawl_runs.py`. Bài học 05.
-   - ⏭ **Đợt 3 = Task 6–8**: `/api/dashboard/`, gắn nhãn từ khóa, lệnh `label_data` / `sample_labels`.
-   - Đợt 4 = Task 9: cập nhật tài liệu. Sau cùng: review toàn nhánh bởi reviewer độc lập.
+   - ✅ Đợt 3 = Task 6–8: `/api/dashboard/` (đúng `DashboardData`, `?include_foreign=1`, app chưa gán công ty có `companyId = "dev:<id>"`),
+     gắn nhãn từ khóa (`market/labeling/`, hàm thuần), lệnh `label_data [--relabel]` và `sample_labels [--n 50] [--seed 0]`. 90 test xanh.
+     Đã thử tay cả đường đi bằng curl: ingest → label_data → dashboard. Bài học 06.
+   - ⏭ **Đợt 4 = Task 9**: cập nhật tài liệu. Sau cùng: review toàn nhánh bởi reviewer độc lập.
    - Sổ tiến độ (không commit): `.superpowers/sdd/2026-11-11-backend-django/progress.md` — ghi task đã xong + các "Ruling".
 4. Sau backend: kế hoạch riêng cho **extension Chrome** (bước 0: khảo sát DOM Google Play bằng tay), rồi nối frontend
    (`lib/dataSource.ts` gọi `/api/dashboard/`), rồi gắn nhãn LLM.
