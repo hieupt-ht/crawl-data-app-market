@@ -7,11 +7,12 @@ Nhờ vậy sau này bộ gắn nhãn bằng AI (LLM) có thể thay thế với
 Hạn chế cần biết khi đọc kết quả:
 - Không hiểu câu phủ định: "không có quảng cáo" vẫn bị gắn nhãn `ads`.
 - Không hiểu mỉa mai, và bỏ sót khi người dùng diễn đạt bằng từ không có trong danh sách.
-- Bỏ dấu có thể làm hai từ khác nghĩa trùng nhau (vd "lỗi" và "lời" đều thành "loi").
+- Review gõ có dấu được so CÓ dấu (để "do" không khớp "đơ", "chấm" không khớp "chậm").
+  Review gõ KHÔNG dấu thì phải bỏ dấu để so, nên vẫn còn nhầm kiểu "toi go app do qc" → `crash` ("đơ").
 Vì vậy cần lệnh `sample_labels` để đọc thử và đếm tỉ lệ đúng.
 """
 
-from market.labeling.text import contains_keyword, normalize
+from market.labeling.text import contains_keyword, prepare_for_matching
 
 # Một nhãn = (id, danh sách từ khóa), ví dụ ("ads", ["quảng cáo", "ads"])
 Label = tuple[str, list[str]]
@@ -42,7 +43,7 @@ def label_review(content: str, pain_labels: list[Label], wish_labels: list[Label
     Trả (mọi pain point khớp — theo thứ tự của `pain_labels`, mong muốn ĐẦU TIÊN khớp hoặc None).
     Ví dụ: "Quảng cáo nhiều, hay văng app" -> (["ads", "crash"], None).
     """
-    text = normalize(content)
+    text = prepare_for_matching(content)
 
     pain_ids = []
     for pain_id, keywords in pain_labels:
@@ -63,8 +64,8 @@ def label_app_domain(title: str, description: str, category: str, domain_labels:
     Chọn lĩnh vực cho app. Điểm = 3 × số từ khóa khớp trong tên + 1 × số từ khóa khớp trong mô tả và thể loại.
     Lấy lĩnh vực điểm cao nhất (> 0); hòa thì lấy lĩnh vực đứng trước; không khớp gì thì None.
     """
-    title_text = normalize(title)
-    body_text = normalize(description + " " + category)
+    title_text = prepare_for_matching(title)
+    body_text = prepare_for_matching(description + " " + category)
 
     best_domain_id = None
     best_score = 0

@@ -35,7 +35,7 @@ PAIN_GROUPS = [
 
 PAIN_POINTS = [
     {"id": "ads", "name": "Quảng cáo quá nhiều", "group": "business",
-     "keywords": ["quảng cáo", "ads", "ad", "advertisement", "advertisements", "qc"]},
+     "keywords": ["quảng cáo", "ads", "advertisement", "advertisements", "qc"]},
     {"id": "paywall", "name": "Ép trả phí/subscription", "group": "business",
      "keywords": ["trả phí", "subscription", "premium", "pay", "paywall", "mất phí", "tính phí"]},
     {"id": "locked", "name": "Khóa tính năng cơ bản", "group": "business",
@@ -51,7 +51,7 @@ PAIN_POINTS = [
     {"id": "data_loss", "name": "Mất dữ liệu", "group": "technical",
      "keywords": ["mất dữ liệu", "mất file", "lost", "deleted my", "mất hết", "data loss", "mất ảnh"]},
     {"id": "ux", "name": "Giao diện khó dùng", "group": "experience",
-     "keywords": ["khó dùng", "khó sử dụng", "confusing", "giao diện", "interface", "ui", "complicated", "rối"]},
+     "keywords": ["khó dùng", "khó sử dụng", "confusing", "giao diện", "interface", "complicated", "rối"]},
     {"id": "missing", "name": "Thiếu tính năng", "group": "experience",
      "keywords": ["thiếu", "missing", "không có tính năng", "no option", "can't edit", "lack"]},
 ]
