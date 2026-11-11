@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài 03 — Bỏ thanh trượt trọng số</title>
+<style>
+  :root {
+    --ink: #1a1a19; --ink-2: #52514e; --muted: #898781; --line: #e1e0d9;
+    --page: #f7f7f4; --card: #ffffff; --accent: #2a78d6; --accent-soft: #eaf2fc;
+    --code-bg: #f3f2ee; --warn: #b35a00; --warn-soft: #fff4e5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.7 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 30px; line-height: 1.25; margin: 0 0 6px; }
+  h2 { font-size: 22px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 28px 0 8px; }
+  .lead { color: var(--ink-2); font-size: 17px; }
+  .meta { color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+  nav.toc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 20px; margin: 24px 0; }
+  nav.toc ol { margin: 6px 0; padding-left: 20px; }
+  .concept { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 22px 14px; margin: 18px 0; }
+  .concept h3 { margin-top: 18px; }
+  .file { font: 12px/1 ui-monospace, Consolas, monospace; color: var(--muted); margin: 14px 0 -6px; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+        overflow-x: auto; font: 13.5px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.92em; }
+  p code, li code, td code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  .pitfall { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  .pitfall b { color: var(--warn); }
+  .tip { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  .timeline { border-left: 2px solid var(--line); margin: 12px 0 12px 6px; padding-left: 16px; font-size: 15px; }
+  .timeline p { margin: 6px 0; }
+  .timeline b { color: var(--ink-2); }
+</style>
+</head>
+<body>
+<main>
+
+
+<p class="meta">Bài 03 · 11/11/2026 · Thời gian đọc ~15 phút · <a href="index.html">← Mục lục</a></p>
+<h1>Bỏ thanh trượt trọng số: dashboard để đọc, không phải để chỉnh</h1>
+<p class="lead">3 thanh trượt Nhu cầu / Mức bất mãn / Độ dễ sửa làm chính người viết ra chúng cũng thấy khó hiểu.
+Hôm nay mình bỏ chúng đi, thay điểm 0–100 bằng 3 thanh ghi <b>số thật</b> (rê chuột vào thì ra số chi tiết),
+và xếp hạng lĩnh vực theo một tiêu chí ai cũng hiểu: <b>% đánh giá 1–2★</b>.</p>
+
+<nav class="toc">
+  <b>Mục lục</b>
+  <ol>
+    <li><a href="#lam-gi">Hôm nay làm gì & cách chạy</a></li>
+    <li><a href="#ban-do-file">Bản đồ file</a></li>
+    <li><a href="#kien-thuc">Kiến thức chính (8 khái niệm)</a></li>
+    <li><a href="#vi-sao">Vì sao chọn cách này</a></li>
+    <li><a href="#tu-kiem-tra">Tự kiểm tra</a></li>
+    <li><a href="#doc-them">Đọc thêm</a></li>
+  </ol>
+</nav>
+
+<!-- ===================================================================== -->
+<h2 id="lam-gi">1. Hôm nay làm gì</h2>
+<ul>
+  <li>Xóa khối 3 thanh trượt, cột “Điểm cơ hội” và tham số <code>w=…</code> trên URL.</li>
+  <li>Bảng ① giờ có 3 cột dạng thanh: <b>Lượt tải (người cần)</b>, <b>% 1–2★ (đang chê)</b>, <b>% chê quảng cáo/giá (dễ sửa)</b>. Rê chuột vào thanh % 1–2★ sẽ hiện ví dụ
+    <code>147.770 lượt chấm 1–2★ / 377.000 lượt chấm (1★: 103.439 · 2★: 44.331)</code>.</li>
+  <li>Thứ hạng mặc định: <b>% 1–2★ cao nhất đứng đầu</b>. Ô KPI và tooltip bản đồ ② đổi theo.</li>
+  <li>Thêm số lượt 1★ và 2★ cho từng app (<code>oneStarRatings</code>, <code>twoStarRatings</code>). Backend sau này lấy từ <code>histogram</code> của google-play-scraper.</li>
+</ul>
+<pre><code>cd frontend
+npm run dev
+# mở http://localhost:3000 → rê chuột vào các thanh ở bảng ①
+# link cũ http://localhost:3000/?w=60-35-25 vẫn mở bình thường (tham số w bị bỏ qua)</code></pre>
+
+<!-- ===================================================================== -->
+<h2 id="ban-do-file">2. Bản đồ file</h2>
+<pre><code>frontend/src/
+├─ lib/
+│  ├─ types.ts              (sửa) App có thêm oneStarRatings, twoStarRatings
+│  ├─ analytics.ts          (sửa) bỏ Weights/scoreDomains/min–max; thêm rankDomains(), số đếm cho tooltip
+│  └─ viewState.ts          (sửa) bỏ trọng số khỏi URL
+├─ data/mockData.ts         (sửa) addStarCounts() tách lượt 1–2★ thành 1★ và 2★
+├─ app/globals.css          (sửa) thêm màu --color-accent-bar cho thanh
+└─ components/dashboard/
+   ├─ MetricBar.tsx         (MỚI) một thanh + hộp chi tiết khi rê chuột
+   ├─ OpportunityTable.tsx  (viết lại) 3 cột thanh, xếp mặc định theo hạng
+   ├─ Dashboard.tsx         (sửa) scoreDomains → rankDomains, bỏ WeightSliders
+   ├─ KpiRow.tsx            (sửa) “Lĩnh vực bị chê nhiều nhất” + 3 số thật
+   ├─ OpportunityMap.tsx    (sửa) tooltip: bỏ “Điểm cơ hội”, thêm % dễ sửa và hạng
+   ├─ PainHeatmap.tsx       (sửa) đổi kiểu ScoredDomain → RankedDomain
+   └─ WeightSliders.tsx     (XÓA)</code></pre>
+
+<!-- ===================================================================== -->
+<h2 id="kien-thuc">3. Kiến thức chính</h2>
+
+<div class="concept">
+<h3>3.1. Số thật dễ hiểu hơn điểm tổng hợp</h3>
+<p>Điểm cũ = log(lượt tải) chuẩn hóa min–max × 40% + … Đúng về toán, nhưng người đọc thấy “83 điểm” thì không biết 83 nghĩa là gì.
+Giống bảng điểm: “Toán 8, Văn 6, Anh 9” dễ hiểu hơn “điểm tổng hợp 7,63 theo hệ số tự chọn”.
+Hiện từng số thật để người đọc tự kết luận (“cả 3 thanh đều dài là đáng làm”) thì minh bạch hơn.</p>
+<p class="pitfall"><b>Lỗi hay gặp:</b> thêm nút chỉnh (thanh trượt, hệ số…) để “linh hoạt”, nhưng người xem không biết vì sao phải chỉnh. Mỗi nút chỉnh phải trả lời được câu hỏi “người dùng sẽ kéo nó khi nào?”.</p>
+</div>
+
+<div class="concept">
+<h3>3.2. Tỉ lệ của tổng, không phải trung bình các tỉ lệ</h3>
+<p>% 1–2★ của lĩnh vực = <b>tổng</b> lượt 1–2★ của mọi app chia <b>tổng</b> lượt chấm. Không lấy trung bình cộng % của từng app,
+vì app 2.000 lượt chấm sẽ có tiếng nói ngang app 600.000 lượt chấm. Cộng số đếm trước rồi mới chia, nên app lớn tự nhiên ảnh hưởng nhiều hơn.
+Lợi ích phụ: tooltip hiện đúng các số đã dùng để chia, người đọc tự bấm máy tính kiểm tra được.</p>
+<p class="file">frontend/src/lib/analytics.ts</p>
+<pre><code>const totalRatings = sum(domainApps.map((app) =&gt; app.ratings));
+const oneStarRatings = sum(domainApps.map((app) =&gt; app.oneStarRatings));
+const twoStarRatings = sum(domainApps.map((app) =&gt; app.twoStarRatings));
+// ...
+lowStarRatio: totalRatings &gt; 0 ? (oneStarRatings + twoStarRatings) / totalRatings : 0,</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> quên kiểm tra chia cho 0 (<code>totalRatings &gt; 0</code>) khi bộ lọc làm một lĩnh vực không còn app nào.</p>
+</div>
+
+<div class="concept">
+<h3>3.3. Xếp hạng bằng hàm thuần (pure function) + Map</h3>
+<p><code>rankDomains</code> sắp xếp một <b>bản sao</b> (<code>[...stats]</code>) để tìm thứ hạng, ghi vào <code>Map</code> (từ điển id → hạng), rồi trả mảng mới có thêm <code>rank</code>.
+Mảng đầu vào giữ nguyên thứ tự, nên bản đồ ② và heatmap ③ vẫn nhận dữ liệu như trước.</p>
+<p class="file">frontend/src/lib/analytics.ts</p>
+<pre><code>export function rankDomains(stats: DomainStat[]): RankedDomain[] {
+  const rankById = new Map(
+    [...stats]
+      .sort((a, b) =&gt; b.lowStarRatio - a.lowStarRatio)
+      .map((stat, index) =&gt; [stat.domain.id, index + 1]),
+  );
+  return stats.map((stat) =&gt; ({ ...stat, rank: rankById.get(stat.domain.id) ?? 0 }));
+}</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> gọi <code>stats.sort(...)</code> trực tiếp. <code>sort</code> sửa luôn mảng gốc, mà mảng đó do <code>useMemo</code> giữ, nên các component khác bị đổi thứ tự “bí ẩn”.</p>
+</div>
+
+<div class="concept">
+<h3>3.4. Tooltip chỉ bằng CSS: named group của Tailwind</h3>
+<p>Hộp chi tiết bị ẩn (<code>hidden</code>) và chỉ hiện khi rê chuột vào phần tử cha (<code>group-hover/metric:block</code>).
+Chữ <code>/metric</code> là <b>tên nhóm</b>: trong một dòng bảng có nhiều nhóm hover lồng nhau, đặt tên để mỗi thanh chỉ mở hộp của chính nó.
+<code>tabIndex={0}</code> cho phép bấm Tab tới thanh, và <code>group-focus/metric:block</code> giúp người dùng bàn phím cũng xem được.</p>
+<p class="file">frontend/src/components/dashboard/MetricBar.tsx</p>
+<pre><code>&lt;div tabIndex={0} className="group/metric relative outline-none"&gt;
+  {/* ... thanh ... */}
+  &lt;div role="tooltip"
+    className="absolute left-0 top-7 z-30 hidden ... group-hover/metric:block group-focus/metric:block"&gt;
+    {details}
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> quên <code>relative</code> ở phần tử cha. Khi đó <code>absolute</code> sẽ bám vào phần tử xa hơn, và hộp hiện lệch hẳn chỗ khác.</p>
+</div>
+
+<div class="concept">
+<h3>3.5. Độ dài thanh: so với giá trị lớn nhất trong bảng</h3>
+<p>Thanh của lĩnh vực lớn nhất dài kín ô, các lĩnh vực khác dài theo tỉ lệ. Khác với min–max của điểm cũ: ở đây giá trị 0 vẫn là thanh 0,
+nên “nửa thanh” đúng nghĩa là “bằng một nửa lĩnh vực cao nhất”. Chữ trên thanh luôn là số thật, còn độ dài chỉ để mắt so sánh nhanh.</p>
+<p class="file">frontend/src/components/dashboard/OpportunityTable.tsx</p>
+<pre><code>const maxLowStar = Math.max(0.0001, ...domains.map((d) =&gt; d.lowStarRatio));
+// ...
+&lt;MetricBar fill={row.lowStarRatio / maxLowStar} label={formatPercent(row.lowStarRatio)} ... /&gt;</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> <code>Math.max(...[])</code> (mảng rỗng) trả về <code>-Infinity</code>. Vì vậy luôn đặt một giá trị sàn như <code>0.0001</code> làm tham số đầu.</p>
+</div>
+
+<div class="concept">
+<h3>3.6. <code>Omit&lt;&gt;</code>: dữ liệu viết tay thiếu trường, rồi “bù” bằng hàm</h3>
+<p>40 app trong <code>mockData.ts</code> chỉ có <code>lowStarRatio</code>. Thay vì gõ tay 80 con số, mình khai báo kiểu “App nhưng chưa có 2 trường đếm sao”
+bằng <code>Omit</code>, rồi dùng <code>.map(addStarCounts)</code> để tạo ra <code>App</code> hoàn chỉnh. TypeScript bảo đảm không app nào bị thiếu trường.</p>
+<p class="file">frontend/src/data/mockData.ts</p>
+<pre><code>type HandwrittenApp = Omit&lt;App, "oneStarRatings" | "twoStarRatings"&gt;;
+
+function addStarCounts(app: HandwrittenApp): App {
+  const lowStarRatings = Math.round(app.ratings * app.lowStarRatio);
+  const oneStarRatings = Math.round(lowStarRatings * 0.7);
+  return { ...app, oneStarRatings, twoStarRatings: lowStarRatings - oneStarRatings };
+}</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> làm tròn 1★ và 2★ riêng lẻ (<code>round(x*0.7)</code> + <code>round(x*0.3)</code>), tổng có thể lệch 1 so với lượt 1–2★. Tính 2★ bằng phép trừ thì tổng luôn khớp.</p>
+</div>
+
+<div class="concept">
+<h3>3.7. Thử giao diện với chữ dài trước khi có dữ liệu thật</h3>
+<p>Dữ liệu giả toàn chữ ngắn, nên giao diện trông ổn, nhưng dữ liệu thật thì không như vậy. Cách kiểm tra: dùng script mở trang, <b>nhét chữ thật dài</b> vào các ô rồi chụp màn hình.
+Kết quả: bảng ① chỉ cao lên, còn thẻ review thì <b>vỡ</b>, vì chuỗi liền không dấu cách (link dài, “AAAA…”) tràn ra ngoài khung.
+Trình duyệt chỉ xuống dòng ở dấu cách, nên một “từ” dài hơn khung sẽ tràn ra.</p>
+<p class="file">frontend/src/components/panels/ReviewCard.tsx · OpportunityTable.tsx</p>
+<pre><code>{/* cho phép ngắt giữa một "từ" quá dài */}
+&lt;p className="text-sm leading-relaxed text-ink wrap-break-word"&gt;{review.content}&lt;/p&gt;
+
+{/* ô chữ trong bảng: tối đa 2 dòng rồi "…", rê chuột hiện đủ */}
+&lt;p className="line-clamp-2" title={topPainName}&gt;{topPainName}&lt;/p&gt;</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> dùng <code>truncate</code> (1 dòng) cho chữ tiếng Việt dài thì mất gần hết nội dung. <code>line-clamp-2</code> kèm <code>title</code> là cách cân bằng giữa gọn và đủ thông tin.</p>
+</div>
+
+<div class="concept">
+<h3>3.8. Donut: ít lát, có “Khác”, % ghi ở chú thích</h3>
+<p>Khối ④ “Top mong muốn” đổi từ cột ngang sang donut để thấy <b>tỉ trọng</b> (“mong muốn này chiếm bao nhiêu phần”).
+Mắt người so độ dài cột tốt hơn nhiều so với so góc của các lát, nên donut chỉ dùng tốt khi <b>ít lát</b>.
+Vì vậy mình giữ top 5 lát và gộp phần còn lại vào lát “Khác” (màu xám). % được ghi ở chú thích bên dưới, nên không phải đoán độ lớn của lát.
+Phần tính toán nằm trong <code>lib/</code>, component chỉ lo vẽ.</p>
+<p class="file">frontend/src/lib/analytics.ts</p>
+<pre><code>export function splitTopWishes(wishCounts: WishCount[], topCount: number): WishShares {
+  const top = wishCounts.slice(0, topCount);
+  const others = wishCounts.slice(topCount);
+  return { top, others,
+    otherCount: sum(others.map((w) =&gt; w.count)),
+    total: sum(wishCounts.map((w) =&gt; w.count)) };
+}</code></pre>
+<p>Rê chuột vào lát “Khác” sẽ liệt kê đủ các mục đã gộp. Hộp này dài, nên ở <code>WishesChart.tsx</code> mình bật <code>tooltip.confine: true</code> để hộp không bị đẩy ra ngoài màn hình (khối ④ nằm sát mép trái).</p>
+<p class="pitfall"><b>Lỗi hay gặp:</b> donut 10–15 lát, hoặc donut cho dữ liệu không cộng lại thành 100%. Ở đây 100% là “số review <i>có nêu</i> mong muốn” (1.654), không phải tất cả 3.004 review. Vì vậy con số ở giữa vòng ghi riêng là “55% review có nêu mong muốn”.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="vi-sao">4. Vì sao chọn cách này</h2>
+<table>
+  <tr><th>Quyết định</th><th>Phương án đã bỏ</th><th>Lý do</th></tr>
+  <tr><td>Bỏ hẳn thanh trượt</td><td>Nút chỉnh sẵn (“Team nhỏ”, “Thị trường lớn”); viết lại lời giải thích</td><td>Người xem dashboard không cần tự chỉnh công thức. Bớt một thứ phải hiểu.</td></tr>
+  <tr><td>3 thanh ngang ghi số thật</td><td>Cột chồng điểm 0–100; biểu đồ bong bóng làm phần chính</td><td>Đã vẽ thử cả 3 kiểu, kiểu này đọc nhanh nhất. Biểu đồ miền không hợp vì nó dành cho dữ liệu theo thời gian.</td></tr>
+  <tr><td>Xếp theo % 1–2★</td><td>Giữ công thức 40/35/25 chạy ngầm</td><td>Một câu là giải thích xong. <b>Đánh đổi đã biết:</b> “Ghi chú AI” (2,6 Tr lượt tải) lên hạng 2. Người đọc phải tự nhìn thanh lượt tải để thấy thị trường đó nhỏ.</td></tr>
+  <tr><td>% trên tổng lượt chấm</td><td>Tỉ lệ tiêu cực ÷ tích cực</td><td>% luôn nằm trong 0–100 nên dễ so. Tỉ lệ chia ra 0,4 hay 2,5 lần thì khó hình dung hơn.</td></tr>
+  <tr><td>Đếm từ lượt chấm sao (histogram)</td><td>Đếm số bình luận</td><td>Mình chỉ cào bình luận 1–2★, nên không có số bình luận tích cực để chia.</td></tr>
+  <tr><td>Một màu xanh nhạt cho cả 3 thanh</td><td>3 màu khác nhau như bản vẽ thử</td><td>Tuân theo quy tắc “chỉ một màu nhấn” trong <code>globals.css</code>. Tiêu đề cột đã phân biệt được các thanh.</td></tr>
+  <tr><td>④ Top mong muốn: donut top 5 + “Khác”</td><td>Giữ cột ngang; treemap</td><td>Bạn muốn thấy tỉ trọng và trang đa dạng hơn. Treemap thể hiện được nhiều mục hơn, nhưng donut quen mắt nên ai xem cũng đọc được ngay. <b>Đánh đổi:</b> lát “Khác” khá to (39%), bù lại bằng cách rê chuột vào thì ra danh sách đầy đủ.</td></tr>
+  <tr><td>Bảng màu xám <b>lạnh</b>, thẻ trắng hẳn, chữ phụ đậm hơn</td><td>Xám ngả vàng/nâu (<code>#f4f4f1</code>, <code>#898781</code>)</td><td>Xám ngả vàng làm cả trang trông “mờ mờ tối tối”. Chữ chú thích cũ chỉ đạt tương phản ~3,5:1. Màu mới <code>#6b7280</code> đạt 4,8:1 (chuẩn WCAG là ≥ 4,5:1). Chỉ cần sửa 2 chỗ (<code>globals.css</code>, <code>chartTheme.ts</code>), vì mọi component đều dùng màu qua biến chứ không ghi cứng mã màu.</td></tr>
+</table>
+
+<!-- ===================================================================== -->
+<h2 id="tu-kiem-tra">5. Tự kiểm tra</h2>
+
+<details>
+  <summary>Câu 1. Lĩnh vực có 2 app: app A 1.000 lượt chấm, 50% 1–2★; app B 99.000 lượt chấm, 10% 1–2★. % 1–2★ của lĩnh vực là bao nhiêu? Trung bình cộng thì ra bao nhiêu?</summary>
+  <p>Tỉ lệ của tổng: (500 + 9.900) / 100.000 = <b>10,4%</b>. Trung bình cộng: (50% + 10%) / 2 = 30%, sai lệch rất xa vì app A quá nhỏ.</p>
+</details>
+
+<details>
+  <summary>Câu 2. Vì sao <code>rankDomains</code> viết <code>[...stats].sort(...)</code> mà không viết <code>stats.sort(...)</code>?</summary>
+  <p><code>sort</code> sửa mảng tại chỗ. Mảng <code>stats</code> đến từ <code>useMemo</code> và được nhiều component dùng chung, nên phải sắp xếp trên bản sao.</p>
+</details>
+
+<details>
+  <summary>Câu 3. Nếu bỏ <code>/metric</code> trong <code>group/metric</code> và <code>group-hover/metric:block</code> (chỉ còn <code>group</code>), có thể xảy ra lỗi gì?</summary>
+  <p><code>group-hover</code> không tên sẽ phản ứng với tổ tiên gần nhất có class <code>group</code>. Nếu sau này dòng bảng cũng thêm <code>group</code> thì rê vào bất kỳ đâu trên dòng sẽ mở cả 3 hộp cùng lúc.</p>
+</details>
+
+<details>
+  <summary>Bài tập 4. Thêm vào tooltip của thanh “Lượt tải” danh sách app lớn nhất của lĩnh vực.</summary>
+  <p>Gợi ý: <code>InstallsDetails</code> chỉ nhận <code>row</code>. Bạn cần truyền thêm danh sách app (lọc theo <code>domainId</code>, sắp theo <code>minInstalls</code>). Hãy tính danh sách đó trong <code>lib/analytics.ts</code> (vd thêm trường <code>topAppTitle</code> vào <code>DomainStat</code>), đừng tính trong component.</p>
+</details>
+
+<!-- ===================================================================== -->
+<h2 id="doc-them">6. Đọc thêm</h2>
+<ul>
+  <li><a href="https://tailwindcss.com/docs/hover-focus-and-other-states#styling-based-on-parent-state">Tailwind — Styling based on parent state (group, named groups)</a></li>
+  <li><a href="https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys">TypeScript — Omit&lt;Type, Keys&gt;</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted">MDN — Array.prototype.toSorted()</a> (cách viết mới, không sửa mảng gốc)</li>
+</ul>
+
+</main>
+</body>
+</html>

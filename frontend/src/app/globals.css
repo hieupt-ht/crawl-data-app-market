@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/*
+ * Bảng màu & chữ của dashboard (Tailwind v4 khai báo theme ngay trong CSS).
+ * Mỗi biến --color-xxx tự sinh ra class: bg-xxx, text-xxx, border-xxx...
+ * Ví dụ --color-accent => dùng được "bg-accent", "text-accent".
+ *
+ * Quy tắc:
+ *  - Chỉ MỘT màu nhấn (accent, xanh dương) để đánh dấu "cơ hội"; mọi thứ khác dùng xám lạnh (slate).
+ *  - Mọi chữ phải đạt tương phản ≥ 4,5:1 (chuẩn WCAG AA) so với nền của nó.
+ *    Tỉ lệ ghi trong comment là đo trên nền trắng (#fff) và nền trang (#f1f5f9).
+ *  - Không dùng chữ nhỏ hơn 12px; nội dung 14px (text-sm), nhãn/chú thích 13px (text-xs, xem dưới).
+ *  - Mã màu ở đây phải TRÙNG với components/charts/chartTheme.ts (biểu đồ vẽ trên canvas, không đọc được CSS).
+ */
+@theme {
+  --color-accent: #2563eb; /* xanh nhấn; chữ trắng trên nền này 5,2:1 */
+  --color-accent-strong: #1e40af; /* chữ màu nhấn đậm: 8,7:1 */
+  --color-accent-soft: #eff6ff; /* nền nhạt cho dòng đang chọn, ô KPI nổi bật */
+
+  --color-ink: #0f172a; /* chữ chính: 17,9:1 */
+  --color-ink-soft: #334155; /* trích dẫn review, tag, nhãn biểu đồ: 10,4:1 */
+  --color-ink-2: #475569; /* chữ phụ/mô tả: 7,6:1 — KHÔNG dùng màu nhạt hơn cho đoạn văn */
+  --color-muted: #64748b; /* nhãn trục, chú thích nhỏ: 4,8:1 trên trắng — chỉ đặt trên nền trắng */
+  --color-line: #e2e8f0; /* đường kẻ, viền thẻ, rãnh của thanh bar */
+  --color-line-strong: #cbd5e1; /* viền tag */
+  --color-surface: #ffffff; /* nền thẻ */
+  --color-page: #f1f5f9; /* nền trang */
+
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08); /* class "shadow-card" */
+
+  /* Đổi cỡ text-xs mặc định (12px) thành 13px: mọi nhãn/chú thích trong dự án tự lớn lên. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
+}
+
+/* "inline" vì giá trị là biến CSS do next/font tạo lúc chạy (xem app/layout.tsx). */
+@theme inline {
+  --font-sans: var(--font-be-vietnam-pro), Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* Chữ mịn và rõ hơn trên màn hình */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Cột số trong bảng: chữ số rộng bằng nhau để thẳng hàng */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài 02 — Trang chi tiết app</title>
+<style>
+  :root {
+    --ink: #1a1a19; --ink-2: #52514e; --muted: #898781; --line: #e1e0d9;
+    --page: #f7f7f4; --card: #ffffff; --accent: #2a78d6; --accent-soft: #eaf2fc;
+    --code-bg: #f3f2ee; --warn: #b35a00; --warn-soft: #fff4e5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.7 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 30px; line-height: 1.25; margin: 0 0 6px; }
+  h2 { font-size: 22px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 28px 0 8px; }
+  .lead { color: var(--ink-2); font-size: 17px; }
+  .meta { color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+  nav.toc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 20px; margin: 24px 0; }
+  nav.toc ol { margin: 6px 0; padding-left: 20px; }
+  .concept { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 22px 14px; margin: 18px 0; }
+  .concept h3 { margin-top: 18px; }
+  .file { font: 12px/1 ui-monospace, Consolas, monospace; color: var(--muted); margin: 14px 0 -6px; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+        overflow-x: auto; font: 13.5px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.92em; }
+  p code, li code, td code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  .pitfall { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  .pitfall b { color: var(--warn); }
+  .tip { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  .timeline { border-left: 2px solid var(--line); margin: 12px 0 12px 6px; padding-left: 16px; font-size: 15px; }
+  .timeline p { margin: 6px 0; }
+  .timeline b { color: var(--ink-2); }
+</style>
+</head>
+<body>
+<main>
+
+<p class="meta">Bài 02 · 11/11/2026 · Thời gian đọc ~20 phút · <a href="index.html">← Mục lục</a></p>
+<h1>Trang chi tiết app và “URL là trạng thái”</h1>
+<p class="lead">Hôm nay mình chuyển phần chi tiết app từ panel nổi bên phải sang một trang riêng. Để quay lại Overview không bị mất bộ lọc,
+mình đưa trạng thái xem lên URL. Trong lúc làm còn bắt được một lỗi kinh điển của React: <i>stale closure</i>.</p>
+
+<nav class="toc">
+  <b>Mục lục</b>
+  <ol>
+    <li><a href="#lam-gi">Hôm nay làm gì & cách chạy</a></li>
+    <li><a href="#ban-do-file">Bản đồ file</a></li>
+    <li><a href="#kien-thuc">Kiến thức chính (7 khái niệm)</a></li>
+    <li><a href="#vi-sao">Vì sao chọn cách này</a></li>
+    <li><a href="#tu-kiem-tra">Tự kiểm tra</a></li>
+    <li><a href="#doc-them">Đọc thêm</a></li>
+  </ol>
+</nav>
+
+<!-- ===================================================================== -->
+<h2 id="lam-gi">1. Hôm nay làm gì</h2>
+<ul>
+  <li>Thêm trang <code>/apps/[appId]</code>. Ở bảng ⑤ “App đối thủ”, bấm một app là chuyển sang trang này thay vì mở panel.</li>
+  <li>Trang app có 5 khu vực: ① so sánh pain point với trung bình lĩnh vực, ② mong muốn, ③ xu hướng theo tháng, ④ đọc review (lọc, tìm, phân trang), ⑤ app cùng lĩnh vực.</li>
+  <li>Bộ lọc, lĩnh vực đang chọn và trọng số giờ nằm trên URL, ví dụ <code>/?months=6&amp;domain=pdf&amp;w=60-35-25</code>. Nhờ vậy F5, gửi link hay bấm “← Overview” đều giữ nguyên màn hình.</li>
+  <li>Panel khi bấm ô heatmap vẫn giữ dạng nổi bên phải, vì ở đó chỉ cần đọc lướt.</li>
+</ul>
+<pre><code>cd frontend
+npm run dev
+# mở http://localhost:3000 → bấm một app ở bảng ⑤
+# hoặc mở thẳng http://localhost:3000/apps/com.apero.pdfreader?months=6</code></pre>
+
+<!-- ===================================================================== -->
+<h2 id="ban-do-file">2. Bản đồ file</h2>
+<pre><code>frontend/src/
+├── app/
+│   ├── page.tsx                    (sửa) bọc &lt;Dashboard/&gt; trong &lt;Suspense&gt;
+│   └── apps/[appId]/page.tsx       (mới) route trang app: params, generateStaticParams, notFound
+├── lib/
+│   ├── viewState.ts                (mới) ★ đọc/ghi trạng thái xem trên URL
+│   ├── analytics.ts                (sửa) thêm comparePainPoints, queryReviews
+│   └── dataSource.ts               (sửa) thêm getLookups() dùng chung
+├── components/
+│   ├── app-detail/
+│   │   ├── AppDetail.tsx           (mới) ★ ghép 5 khu vực của trang app
+│   │   ├── PainComparison.tsx      (mới) thanh “app này” vs “trung bình lĩnh vực”
+│   │   ├── ReviewExplorer.tsx      (mới) lọc, tìm, sắp xếp, phân trang review
+│   │   └── SiblingApps.tsx         (mới) app khác cùng lĩnh vực
+│   ├── charts/TrendChart.tsx       (mới) tách từ panel cũ để dùng lại
+│   ├── ui/PeriodFilter.tsx         (mới) bộ lọc thời gian + ngôn ngữ dùng chung 2 trang
+│   ├── ui/PageLoading.tsx          (mới) màn hình chờ cho Suspense
+│   ├── dashboard/Dashboard.tsx     (sửa) đọc trạng thái từ URL thay vì useState
+│   ├── dashboard/CompetitorTable.tsx (sửa) tên app là &lt;Link&gt;
+│   └── panels/AppDetailPanel.tsx   (xóa) đã thay bằng trang riêng
+└── data/reviewGenerator.ts         (sửa) mỗi app có 1 “điểm yếu riêng”</code></pre>
+
+<!-- ===================================================================== -->
+<h2 id="kien-thuc">3. Kiến thức chính</h2>
+
+<div class="concept">
+<h3>3.1 Dynamic route: thư mục <code>[appId]</code></h3>
+<p>Trong Next.js, <b>thư mục là đường dẫn</b>. Thư mục tên có ngoặc vuông <code>[appId]</code> là một “ô trống”: URL <code>/apps/com.apero.pdfreader</code> sẽ khớp vào đó, và giá trị <code>"com.apero.pdfreader"</code> được truyền vào qua prop <code>params</code>.
+Ở Next 16, <code>params</code> là một <b>Promise</b>, nên phải <code>await</code>.</p>
+<p class="file">src/app/apps/[appId]/page.tsx</p>
+<pre><code>export function generateStaticParams() {          // dựng sẵn 40 trang lúc build
+  return getDashboardData().apps.map((app) =&gt; ({ appId: app.id }));
+}
+
+export default async function AppPage({ params }: PageProps&lt;"/apps/[appId]"&gt;) {
+  const { appId } = await params;
+  const app = getLookups().appById.get(decodeURIComponent(appId));
+  if (!app) notFound();                             // id sai -&gt; giao diện 404
+  return &lt;Suspense fallback={&lt;PageLoading /&gt;}&gt;&lt;AppDetail app={app} /&gt;&lt;/Suspense&gt;;
+}</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> viết <code>params.appId</code> mà không <code>await</code>, cách của Next 14 trở về trước. Ở Next 15/16, TypeScript sẽ báo lỗi. <code>PageProps</code> là kiểu do Next tự sinh: chạy <code>npx next typegen</code> (hoặc <code>npm run dev</code>) nếu editor báo không tìm thấy.</p>
+</div>
+
+<div class="concept">
+<h3>3.2 URL là trạng thái (state)</h3>
+<p>Bài 01 giữ bộ lọc bằng <code>useState</code>, nên chuyển trang là mất. Lần này mình đặt chúng lên <b>URL</b>. URL giống “tờ ghi chú dán trên địa chỉ trang”: ai mở link cũng thấy đúng những gì bạn đang xem.</p>
+<p class="file">src/lib/viewState.ts</p>
+<pre><code>// Đọc: URL -&gt; object. Giá trị sai thì dùng mặc định, không bao giờ làm trang lỗi
+export function parseViewState(params: ReadableParams): ViewState {
+  const monthsParam = Number(params.get("months"));
+  const months = VALID_MONTHS.includes(monthsParam as MonthsRange) ? ... : DEFAULT_FILTERS.months;
+  ...
+}
+
+// Ghi: object -&gt; "?months=6&amp;domain=pdf". Giá trị bằng mặc định thì bỏ qua cho gọn
+export function buildQuery(view: ViewState): string { ... }</code></pre>
+<p>Cặp hàm <b>parse / build</b> này là mẫu rất phổ biến. Một hàm đọc thì chịu được dữ liệu bẩn (ví dụ người dùng gõ <code>?months=99</code>), một hàm ghi thì luôn tạo ra dữ liệu sạch.</p>
+<p class="pitfall"><b>Lỗi hay gặp:</b> tin tưởng dữ liệu từ URL. Ai cũng sửa được URL, nên luôn kiểm tra và có giá trị mặc định.</p>
+</div>
+
+<div class="concept">
+<h3>3.3 <code>useSearchParams</code> phải nằm trong <code>&lt;Suspense&gt;</code></h3>
+<p>Lúc build, Next.js dựng sẵn HTML nhưng <b>chưa biết URL thật</b> sẽ có <code>?months=</code> bao nhiêu. Vì vậy component nào đọc URL bằng <code>useSearchParams()</code> phải bọc trong <code>&lt;Suspense fallback={...}&gt;</code>.
+HTML ban đầu chỉ hiện phần fallback (“Đang tải dữ liệu…”), rồi trình duyệt vẽ phần thật sau khi đọc được URL.</p>
+<p class="file">src/app/page.tsx</p>
+<pre><code>export default function Home() {
+  return (
+    &lt;Suspense fallback={&lt;PageLoading /&gt;}&gt;
+      &lt;Dashboard /&gt;          {/* bên trong gọi useSearchParams() */}
+    &lt;/Suspense&gt;
+  );
+}</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> quên Suspense thì <code>npm run build</code> báo lỗi “useSearchParams() should be wrapped in a suspense boundary”.</p>
+</div>
+
+<div class="concept">
+<h3>3.4 Stale closure: lỗi “bấm nhanh bị mất lựa chọn”</h3>
+<p>Đây là lỗi mình gặp thật trong lúc kiểm tra. Ban đầu code viết như sau:</p>
+<pre><code>// ❌ Phiên bản đầu
+const updateView = (patch) =&gt; writeToUrl({ ...view, ...patch });   // dùng biến `view` của lần render này</code></pre>
+<p>Mỗi lần React render, hàm <code>updateView</code> “chụp ảnh” biến <code>view</code> lúc đó (gọi là <b>closure</b>, bao đóng). Bấm 2 nút thật nhanh, trước khi React kịp vẽ lại, thì sẽ xảy ra chuyện sau:</p>
+<div class="timeline">
+  <p><b>Bấm “6 tháng”:</b> ghi <code>{months: 6}</code> lên URL ✔</p>
+  <p><b>Bấm “Đọc PDF” (React chưa vẽ lại):</b> dùng ảnh chụp cũ <code>{months: 12}</code> + <code>{domain: pdf}</code></p>
+  <p><b>Kéo thanh trượt:</b> dùng ảnh chụp lúc có months=6 nhưng <i>chưa có</i> domain → ghi đè, <b>mất domain</b> ✘</p>
+</div>
+<p>Cách sửa: mỗi lần cập nhật thì đọc trạng thái <b>mới nhất ngay từ URL</b>, không dùng ảnh chụp cũ.</p>
+<p class="file">src/lib/viewState.ts</p>
+<pre><code>export function updateViewInUrl(patch: Partial&lt;ViewState&gt;): void {
+  const current = parseViewState(new URLSearchParams(window.location.search)); // luôn mới nhất
+  const url = `${window.location.pathname}${buildQuery({ ...current, ...patch })}`;
+  window.history.replaceState(null, "", url);
+}</code></pre>
+<p class="tip">Với <code>useState</code>, cách tương tự là dùng dạng hàm: <code>setCount(c =&gt; c + 1)</code> thay vì <code>setCount(count + 1)</code>. Hàm <code>toggleDomain</code> trong Dashboard của bài 01 đã viết theo đúng kiểu này.</p>
+<p class="pitfall"><b>Lỗi hay gặp:</b> thử bằng tay thì không thấy lỗi, vì người bấm chậm. Lỗi chỉ lộ ra khi máy bấm (test tự động) hoặc khi mạng chậm. Đây là lý do nên viết test tự động.</p>
+</div>
+
+<div class="concept">
+<h3>3.5 <code>replaceState</code> vs <code>pushState</code> vs <code>&lt;Link&gt;</code></h3>
+<table>
+  <tr><th>Cách</th><th>Dùng khi</th><th>Trong dự án</th></tr>
+  <tr><td><code>&lt;Link href&gt;</code></td><td>Chuyển sang <b>trang khác</b></td><td>Tên app ở bảng ⑤, “← Overview”, app cùng lĩnh vực</td></tr>
+  <tr><td><code>router.push()</code></td><td>Chuyển trang từ code (không phải thẻ &lt;a&gt;)</td><td>Bấm chỗ trống trong dòng bảng ⑤</td></tr>
+  <tr><td><code>history.replaceState</code></td><td>Đổi URL <b>cùng trang</b>, không thêm vào nút Back</td><td>Bộ lọc, thanh trượt</td></tr>
+  <tr><td><code>history.pushState</code></td><td>Đổi URL cùng trang <b>và</b> muốn Back quay lại được</td><td>(chưa dùng)</td></tr>
+</table>
+<p>Thanh trượt dùng <b>replace</b> vì kéo một lần có thể tạo ra 20 lần đổi giá trị. Nếu dùng push, người dùng phải bấm Back 20 lần.</p>
+<p class="file">src/components/dashboard/CompetitorTable.tsx</p>
+<pre><code>&lt;tr onClick={() =&gt; onOpenApp(app.id)}&gt;          {/* bấm cả dòng */}
+  &lt;Link href={appHref(app.id)}
+        onClick={(event) =&gt; event.stopPropagation()}&gt;  {/* tránh chạy 2 lần */}
+    {app.title}
+  &lt;/Link&gt;</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> không có <code>stopPropagation()</code> thì bấm vào Link sẽ kích hoạt cả onClick của <code>&lt;tr&gt;</code> chứa nó (sự kiện “nổi bọt” lên cha), dẫn tới điều hướng 2 lần.</p>
+</div>
+
+<div class="concept">
+<h3>3.6 Component “được điều khiển” (controlled) và đặt lại trang 1</h3>
+<p><code>ReviewExplorer</code> <b>không tự giữ state</b>. Bộ lọc và số trang do cha <code>AppDetail</code> giữ. Lý do: khi bấm một dòng ở khu “So sánh pain point” (một component khác), cha phải đổi được bộ lọc của khu review.</p>
+<p class="file">src/components/app-detail/AppDetail.tsx</p>
+<pre><code>const changeReviewQuery = useCallback((query: ReviewQuery) =&gt; {
+  setReviewQuery(query);
+  setReviewPage(1);           // đổi bộ lọc thì quay về trang 1
+}, []);
+
+const showReviewsForPain = (painId: string) =&gt; {
+  changeReviewQuery({ ...reviewQuery, painId });
+  reviewSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+};</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> đang ở trang 5, lọc lại chỉ còn 2 trang, thế là màn hình trống. Có 2 lớp bảo vệ: đặt lại trang 1 khi đổi bộ lọc, và trong <code>ReviewExplorer</code> dùng <code>Math.min(page, pageCount)</code>.</p>
+</div>
+
+<div class="concept">
+<h3>3.7 So sánh với “mặt bằng”: điểm phần trăm</h3>
+<p>Nói “app này có 30% review chê crash” thì chưa biết là nhiều hay ít. Phải đặt cạnh <b>mức chung của lĩnh vực</b> (23%) mới thấy app này <b>nặng hơn</b>.
+Hiệu 30% − 23% = <b>7 điểm phần trăm</b> (percentage points). Đây là cách nói chính xác, khác với “nhiều hơn 7%” (vì 30 lớn hơn 23 khoảng 30%).</p>
+<p class="file">src/components/app-detail/PainComparison.tsx</p>
+<pre><code>const NOTABLE_GAP = 0.05;   // chênh từ 5 điểm trở lên mới coi là khác biệt rõ
+
+if (gap &gt;= NOTABLE_GAP)  → "+7 điểm · nặng hơn"   (màu nhấn: điểm yếu riêng = cơ hội)
+if (gap &lt;= -NOTABLE_GAP) → "-11 điểm · nhẹ hơn"
+otherwise               → "≈ ngang mặt bằng"</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> “trung bình lĩnh vực” mà lại tính theo bộ lọc công ty thì sẽ chỉ so với chính mình. Vì vậy <code>AppDetail</code> lọc review với <code>companyId: "all"</code>.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="vi-sao">4. Vì sao chọn cách này</h2>
+<table>
+  <tr><th>Quyết định</th><th>Phương án đã bỏ</th><th>Lý do</th></tr>
+  <tr><td>Trạng thái xem để trên URL</td><td>useState, hoặc localStorage</td><td>Giữ được qua chuyển trang, F5 và gửi link. localStorage không gửi kèm link được.</td></tr>
+  <tr><td>Panel ô heatmap vẫn nổi bên phải</td><td>Chuyển trang luôn</td><td>Ở đó chỉ cần đọc lướt 10 review. Chuyển trang sẽ mất mạch đang so sánh.</td></tr>
+  <tr><td>Thanh so sánh vẽ bằng HTML</td><td>Biểu đồ cột đôi của ECharts</td><td>Cần chữ “+7 điểm · nặng hơn” trên từng dòng và bấm được để lọc review. HTML làm việc này đơn giản hơn.</td></tr>
+  <tr><td>Tách <code>PeriodFilter</code>, <code>TrendChart</code></td><td>Copy code sang trang mới</td><td>Hai trang dùng chung, sửa một chỗ là cả hai cập nhật.</td></tr>
+  <tr><td>Mỗi app giả có 1 “điểm yếu riêng”</td><td>Mọi app cùng lĩnh vực giống nhau</td><td>Nếu giống nhau thì phần so sánh luôn hiện “ngang mặt bằng”, không thử được giao diện.</td></tr>
+</table>
+<p class="tip"><b>Hạn chế cần biết:</b> mở <code>/apps/id-sai</code> sẽ hiện trang 404, nhưng mã HTTP vẫn là 200. Khi bật Cache Components, Next.js gửi “khung trang” trước, sau đó mới biết id sai, lúc này mã trạng thái đã gửi đi rồi (xem tài liệu “The HTTP contract”). Với dashboard nội bộ thì không ảnh hưởng.</p>
+
+<!-- ===================================================================== -->
+<h2 id="tu-kiem-tra">5. Tự kiểm tra</h2>
+
+<details>
+  <summary>Câu 1. Mở <code>/?months=99&amp;w=abc</code> thì dashboard hiện gì? Vì sao không bị lỗi?</summary>
+  <p>Dashboard hiện 12 tháng và trọng số 40/35/25. Hàm <code>parseViewState</code> chỉ chấp nhận 3/6/12, và <code>parseWeights</code> kiểm tra phải đúng 3 số nguyên 0–100. Sai thì quay về mặc định.</p>
+</details>
+
+<details>
+  <summary>Câu 2. Vì sao kéo thanh trượt dùng <code>replaceState</code> chứ không phải <code>pushState</code>?</summary>
+  <p>Mỗi lần kéo tạo ra nhiều giá trị liên tiếp. Dùng push thì mỗi giá trị thành một mục trong lịch sử, và người dùng phải bấm Back rất nhiều lần mới thoát khỏi trang.</p>
+</details>
+
+<details>
+  <summary>Câu 3. Cho <code>const [count, setCount] = useState(0)</code>. Gọi <code>setCount(count + 1)</code> hai lần liên tiếp trong cùng một hàm thì count thành bao nhiêu? Sửa thế nào để ra 2?</summary>
+  <p>Ra 1, vì cả hai lần đều dùng ảnh chụp <code>count = 0</code> (stale closure). Sửa thành <code>setCount(c =&gt; c + 1)</code> hai lần, React sẽ truyền giá trị mới nhất vào <code>c</code>.</p>
+</details>
+
+<details>
+  <summary>Bài tập 4. Đưa trang review hiện tại (<code>reviewPage</code>) lên URL, để gửi link “trang 3 review của app X” cho người khác.</summary>
+  <p>Gợi ý: thêm tham số <code>?rp=3</code>. Đọc bằng <code>useSearchParams().get("rp")</code> (nhớ kiểm tra là số nguyên ≥ 1), ghi bằng <code>history.replaceState</code>. Thử nghĩ xem tham số này có nên được mang về Overview không. Đáp án: không, nên đừng thêm nó vào <code>ViewState</code> chung.</p>
+</details>
+
+<details>
+  <summary>Bài tập 5. App có 40% review chê quảng cáo, lĩnh vực là 32%. Trang hiện chữ gì? Nếu đổi <code>NOTABLE_GAP</code> thành 0,10 thì sao?</summary>
+  <p>Chênh 8 điểm, lớn hơn hoặc bằng 5, nên hiện “+8 điểm · nặng hơn”. Với ngưỡng 0,10 thì 8 &lt; 10, nên hiện “≈ ngang mặt bằng”.</p>
+</details>
+
+<!-- ===================================================================== -->
+<h2 id="doc-them">6. Đọc thêm</h2>
+<ul>
+  <li><a href="https://nextjs.org/docs/app/api-reference/file-conventions/dynamic-routes">Next.js — Dynamic Routes</a></li>
+  <li><a href="https://nextjs.org/docs/app/api-reference/functions/use-search-params">Next.js — useSearchParams</a> (phần Prerendering &amp; Suspense)</li>
+  <li><a href="https://react.dev/learn/state-as-a-snapshot">React — State as a Snapshot</a> (giải thích stale closure rất dễ hiểu)</li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState">MDN — History.replaceState()</a></li>
+</ul>
+
+</main>
+</body>
+</html>

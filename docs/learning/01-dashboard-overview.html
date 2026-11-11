@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài 01 — Dashboard Overview</title>
+<style>
+  :root {
+    --ink: #1a1a19; --ink-2: #52514e; --muted: #898781; --line: #e1e0d9;
+    --page: #f7f7f4; --card: #ffffff; --accent: #2a78d6; --accent-soft: #eaf2fc;
+    --code-bg: #f3f2ee; --warn: #b35a00; --warn-soft: #fff4e5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.7 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 30px; line-height: 1.25; margin: 0 0 6px; }
+  h2 { font-size: 22px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 28px 0 8px; }
+  p, li { color: var(--ink); }
+  .lead { color: var(--ink-2); font-size: 17px; }
+  .meta { color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+  nav.toc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 20px; margin: 24px 0; }
+  nav.toc ol { margin: 6px 0; padding-left: 20px; }
+  .concept { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 22px 14px; margin: 18px 0; }
+  .concept h3 { margin-top: 18px; }
+  .file { font: 12px/1 ui-monospace, Consolas, monospace; color: var(--muted); margin: 14px 0 -6px; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+        overflow-x: auto; font: 13.5px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.92em; }
+  p code, li code, td code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  .pitfall { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  .pitfall b { color: var(--warn); }
+  .tip { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; }
+  .tree { white-space: pre; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; font-size: 14px; }
+  .flow span.box { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+  .flow span.arrow { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<p class="meta">Bài 01 · 10/11/2026 · Thời gian đọc ~20 phút</p>
+<h1>Dashboard Overview với Next.js, Tailwind và ECharts</h1>
+<p class="lead">Hôm nay mình dựng trang Overview của “App Opportunity Finder” bằng dữ liệu giả, để xem bố cục và
+trải nghiệm trước khi có dữ liệu thật. Bài này giải thích các kiến thức đã dùng, kèm code lấy từ chính dự án.</p>
+
+<nav class="toc">
+  <b>Mục lục</b>
+  <ol>
+    <li><a href="#lam-gi">Hôm nay làm gì & cách chạy</a></li>
+    <li><a href="#ban-do-file">Bản đồ file</a></li>
+    <li><a href="#kien-thuc">Kiến thức chính (7 khái niệm)</a></li>
+    <li><a href="#vi-sao">Vì sao chọn cách này</a></li>
+    <li><a href="#tu-kiem-tra">Tự kiểm tra</a></li>
+    <li><a href="#doc-them">Đọc thêm</a></li>
+  </ol>
+</nav>
+
+<!-- ===================================================================== -->
+<h2 id="lam-gi">1. Hôm nay làm gì</h2>
+<ul>
+  <li>Tạo dự án Next.js 16 (TypeScript + Tailwind v4) trong thư mục <code>frontend/</code>.</li>
+  <li>Sinh dữ liệu giả: 8 lĩnh vực, 40 app, 8 công ty, ~3.000 review 1–2★ có “câu chuyện” (PDF đau vì quảng cáo, ảnh AI đau vì paywall…).</li>
+  <li>Dựng trang Overview: header + bộ lọc, 4 ô KPI, ① bảng xếp hạng cơ hội (có 3 thanh trượt trọng số), ② bản đồ cơ hội (scatter),
+      ③ heatmap, ④ biểu đồ mong muốn, ⑤ bảng app đối thủ, và 2 panel bên phải.</li>
+  <li>Kiểm tra tự động bằng Chrome headless: không lỗi console, mọi tương tác hoạt động.</li>
+</ul>
+<p><b>Chạy thử:</b></p>
+<pre><code>cd frontend
+npm install        # lần đầu
+npm run dev        # mở http://localhost:3000</code></pre>
+<p>Kiểm tra code trước khi nộp: <code>npx tsc --noEmit</code> (lỗi kiểu), <code>npm run lint</code> (lỗi phong cách), <code>npm run build</code> (build thật).</p>
+
+<!-- ===================================================================== -->
+<h2 id="ban-do-file">2. Bản đồ file</h2>
+<pre class="tree"><code>frontend/src/
+├── app/
+│   ├── layout.tsx          Khung HTML chung (lang="vi", tiêu đề trang)
+│   ├── page.tsx            Trang "/" — chỉ render &lt;Dashboard /&gt;
+│   └── globals.css         Tailwind + bảng màu (@theme)
+├── data/
+│   ├── mockData.ts         ★ Object DATA (dữ liệu giả) + ghi chú cách thay dữ liệu thật
+│   └── reviewGenerator.ts  Sinh ~3.000 review giả có seed
+├── lib/
+│   ├── types.ts            ★ "Hợp đồng" dữ liệu (interface) — backend phải trả đúng hình dạng này
+│   ├── dataSource.ts       Điểm duy nhất quyết định lấy dữ liệu từ đâu
+│   ├── analytics.ts        ★ Mọi phép tính: lọc, đếm, điểm cơ hội (hàm thuần)
+│   └── format.ts           Định dạng số kiểu Việt Nam: 1.234.567 · 21,5%
+└── components/
+    ├── charts/EChart.tsx   Bọc thư viện ECharts thành component React
+    ├── charts/chartTheme.ts Màu & kiểu tooltip dùng chung
+    ├── ui/                 Card, InfoTip (dấu ? giải thích)
+    ├── dashboard/          Dashboard (chỉ huy) + từng khu vực ①–⑤
+    └── panels/             SidePanel, panel review ô heatmap, panel chi tiết app</code></pre>
+<p class="tip">Ba file có dấu ★ là “xương sống”. Nếu chỉ có 10 phút, hãy đọc <code>types.ts</code> → <code>analytics.ts</code> → <code>Dashboard.tsx</code>.</p>
+
+<!-- ===================================================================== -->
+<h2 id="kien-thuc">3. Kiến thức chính</h2>
+
+<div class="concept">
+<h3>3.1 Server Component và Client Component (<code>"use client"</code>)</h3>
+<p>Trong Next.js (App Router), mọi component <b>mặc định chạy trên server</b>: server tạo sẵn HTML rồi gửi cho trình duyệt.
+Cách này nhanh, nhưng server không có chuột hay bàn phím, nên không xử lý được <code>onClick</code> và không giữ được <code>useState</code>.</p>
+<p>Component nào cần tương tác thì ghi <code>"use client"</code> ở dòng đầu. Khi đó code của nó được gửi xuống trình duyệt để chạy.</p>
+<p class="file">src/app/page.tsx (server) → src/components/dashboard/Dashboard.tsx (client)</p>
+<pre><code>// page.tsx — Server Component, chỉ là cái vỏ
+export default function Home() {
+  return &lt;Dashboard /&gt;;
+}
+
+// Dashboard.tsx
+"use client";               // ← cần state + click nên phải là Client Component
+export default function Dashboard() {
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  ...</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> quên <code>"use client"</code> rồi dùng <code>useState</code> → Next.js báo lỗi ngay khi build. Ngược lại, đừng
+gắn <code>"use client"</code> cho mọi file “cho chắc”, vì làm vậy gửi thừa JavaScript xuống trình duyệt.</p>
+</div>
+
+<div class="concept">
+<h3>3.2 State, props và luồng dữ liệu một chiều</h3>
+<p><b>State</b> (trạng thái) là dữ liệu có thể thay đổi khi người dùng tương tác: bộ lọc, trọng số, lĩnh vực đang chọn, panel đang mở.
+Toàn bộ state nằm ở <b>một chỗ</b> là <code>Dashboard</code>. Các component con chỉ nhận <b>props</b> (tham số) và gọi <b>callback</b> khi có sự kiện.</p>
+<div class="flow">
+  <span class="box">State ở Dashboard</span><span class="arrow">→ props →</span>
+  <span class="box">OpportunityTable</span><span class="arrow">→ người dùng bấm dòng →</span>
+  <span class="box">onSelectDomain(id)</span><span class="arrow">→</span>
+  <span class="box">setSelectedDomainId</span><span class="arrow">→ React vẽ lại cả trang</span>
+</div>
+<p class="file">src/components/dashboard/Dashboard.tsx</p>
+<pre><code>const [selectedDomainId, setSelectedDomainId] = useState&lt;string | null&gt;(null);
+
+// Bấm lại đúng lĩnh vực đang chọn = bỏ chọn
+const toggleDomain = useCallback((domainId: string) =&gt; {
+  setSelectedDomainId((current) =&gt; (current === domainId ? null : domainId));
+}, []);
+
+&lt;OpportunityTable onSelectDomain={toggleDomain} ... /&gt;
+&lt;OpportunityMap   onSelectDomain={toggleDomain} ... /&gt;
+&lt;PainHeatmap      onSelectDomain={toggleDomain} ... /&gt;</code></pre>
+<p>Nhờ cả ①, ② và ③ dùng chung một hàm <code>toggleDomain</code>, bấm ở chỗ nào thì toàn trang cũng lọc giống nhau. Đó là lợi ích của việc giữ state ở một nơi (“lifting state up”).</p>
+<p class="pitfall"><b>Lỗi hay gặp:</b> mỗi component tự giữ một state <code>selected</code> riêng, dẫn tới bảng chọn A còn biểu đồ vẫn chọn B. Hai chỗ cần cùng một dữ liệu thì đẩy state lên component cha chung.</p>
+</div>
+
+<div class="concept">
+<h3>3.3 <code>useMemo</code>: dữ liệu phái sinh</h3>
+<p>Dữ liệu hiển thị (review đã lọc, điểm cơ hội…) <b>không lưu vào state</b>. Nó được <b>tính ra từ state</b> mỗi lần vẽ.
+<code>useMemo</code> giúp “nhớ” kết quả và chỉ tính lại khi đầu vào đổi. Nhờ vậy khi bạn kéo thanh trượt trọng số,
+React không phải lọc lại 3.000 review mà chỉ chấm điểm lại 8 lĩnh vực.</p>
+<p class="file">src/components/dashboard/Dashboard.tsx</p>
+<pre><code>const apps        = useMemo(() =&gt; filterApps(data.apps, filters.companyId), [filters.companyId]);
+const reviews     = useMemo(() =&gt; filterReviews(data.reviews, apps, filters, ...), [apps, filters]);
+const domainStats = useMemo(() =&gt; computeDomainStats(data, apps, reviews), [apps, reviews]);
+const scored      = useMemo(() =&gt; scoreDomains(domainStats, weights), [domainStats, weights]);
+//                                                                    ↑ chỉ phụ thuộc weights + stats</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> lưu kết quả tính toán vào state rồi dùng <code>useEffect</code> để đồng bộ. Cách này vừa thừa vừa dễ lệch dữ liệu.
+Quy tắc: thứ gì <i>tính được</i> từ state thì đừng biến nó thành state.</p>
+</div>
+
+<div class="concept">
+<h3>3.4 TypeScript <code>interface</code>: “hợp đồng” dữ liệu</h3>
+<p><code>lib/types.ts</code> mô tả chính xác hình dạng dữ liệu. Gõ sai tên trường là editor báo đỏ ngay.
+Quan trọng hơn, đây là <b>hợp đồng</b> giữa frontend và backend: khi làm Django, API chỉ cần trả JSON đúng hình dạng <code>DashboardData</code> là giao diện chạy được.</p>
+<p class="file">src/lib/types.ts</p>
+<pre><code>export interface Review {
+  id: string;
+  appId: string;
+  score: 1 | 2;            // chỉ cho phép 1 hoặc 2 (literal type)
+  date: string;            // "YYYY-MM-DD"
+  lang: ReviewLang;        // "en" | "vi"
+  content: string;
+  painPoints: string[];    // 1 review có thể có nhiều nhãn
+  wishId: string | null;   // có thể không có mong muốn
+  thumbsUp: number;
+}</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> dùng <code>any</code> cho nhanh, làm mất hết lợi ích kiểm tra. Nếu thật sự chưa biết kiểu thì dùng <code>unknown</code> rồi ép kiểu có chủ đích (xem tooltip trong <code>OpportunityMap.tsx</code>).</p>
+</div>
+
+<div class="concept">
+<h3>3.5 Tách tính toán ra hàm thuần (pure function)</h3>
+<p>Mọi phép tính nằm trong <code>lib/analytics.ts</code>, không dính gì tới giao diện. Hàm thuần nghĩa là cùng đầu vào thì luôn cho cùng đầu ra,
+và không sửa dữ liệu gốc. Lợi ích: dễ đọc, dễ viết test, và sau này có thể chuyển nguyên logic sang Python/Django.</p>
+<p>Ví dụ quan trọng nhất là <b>điểm cơ hội</b>:</p>
+<p class="file">src/lib/analytics.ts</p>
+<pre><code>const w = normalizeWeights(weights);   // 40/35/25 → 0,40/0,35/0,25 (tổng luôn = 1)
+const scaleDemand = createMinMaxScaler(stats.map((s) =&gt; Math.log10(s.totalInstalls)));
+...
+const score = 100 * (w.demand * demandNorm
+                   + w.dissatisfaction * dissatisfactionNorm
+                   + w.easyFix * easyFixNorm);</code></pre>
+<table>
+  <tr><th>Kỹ thuật</th><th>Ý nghĩa</th><th>Vì sao cần</th></tr>
+  <tr><td><b>log10</b></td><td>100K→5, 1M→6, 10M→7</td><td>Không để lĩnh vực 76 triệu lượt tải đè bẹp lĩnh vực 2,6 triệu</td></tr>
+  <tr><td><b>Min–max</b></td><td>(x − min) / (max − min)</td><td>Đưa 3 thành phần khác đơn vị (lượt tải, %, %) về cùng thang 0–1 để cộng được</td></tr>
+  <tr><td><b>Chuẩn hóa trọng số</b></td><td>chia cho tổng</td><td>Kéo thanh trượt thế nào thì điểm vẫn nằm trong 0–100</td></tr>
+</table>
+<p class="pitfall"><b>Lỗi hay gặp:</b> với min–max, lĩnh vực thấp nhất luôn bằng 0 và cao nhất luôn bằng 1, nên điểm chỉ mang tính <i>so sánh tương đối</i> giữa các lĩnh vực đang hiển thị. Lọc theo một công ty thì điểm sẽ thay đổi, và đó là chuyện bình thường.</p>
+</div>
+
+<div class="concept">
+<h3>3.6 Dùng thư viện không phải React (ECharts) với <code>useRef</code> + <code>useEffect</code></h3>
+<p>ECharts không hiểu React. Nó cần một thẻ <code>&lt;div&gt;</code> thật để vẽ vào. Cách làm chuẩn gồm 3 bước:</p>
+<ol>
+  <li><code>useRef</code> lấy thẻ div thật.</li>
+  <li><code>useEffect</code> (chỉ chạy trên trình duyệt) gọi <code>echarts.init</code>, và <b>dọn dẹp</b> bằng <code>dispose()</code> khi component bị gỡ.</li>
+  <li>Một <code>useEffect</code> khác gọi <code>setOption</code> mỗi khi <code>option</code> đổi.</li>
+</ol>
+<p class="file">src/components/charts/EChart.tsx</p>
+<pre><code>useEffect(() =&gt; {
+  const chart = echarts.init(containerRef.current!);
+  chartRef.current = chart;
+  const resizeObserver = new ResizeObserver(() =&gt; chart.resize());
+  resizeObserver.observe(containerRef.current!);
+  return () =&gt; {               // ← hàm dọn dẹp
+    resizeObserver.disconnect();
+    chart.dispose();
+  };
+}, []);                         // [] = chỉ chạy 1 lần khi gắn vào trang
+
+useEffect(() =&gt; {
+  chartRef.current?.setOption(option, { notMerge: true });
+}, [option]);</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> quên hàm dọn dẹp, gây rò bộ nhớ hoặc cảnh báo “There is a chart instance already initialized”. Ở chế độ dev, React cố ý chạy effect 2 lần (Strict Mode) để lộ ra lỗi này sớm.</p>
+</div>
+
+<div class="concept">
+<h3>3.7 Dữ liệu giả có seed và lỗi “hydration mismatch”</h3>
+<p>Next.js render trang <b>2 lần</b>: một lần trên server để tạo HTML, rồi một lần trên trình duyệt để gắn tương tác (gọi là hydration).
+Nếu dữ liệu giả dùng <code>Math.random()</code> thì 2 lần sẽ ra 2 bộ review khác nhau, và React báo lỗi <i>hydration mismatch</i>.</p>
+<p>Cách giải quyết là dùng <b>bộ sinh số ngẫu nhiên có seed</b>: cùng seed thì luôn ra cùng dãy số. Ngày tháng cũng phải lấy từ một mốc cố định (<code>updatedAt</code>) thay vì <code>new Date()</code>.</p>
+<p class="file">src/data/reviewGenerator.ts</p>
+<pre><code>function createRandom(seed: number): RandomFn {
+  let state = seed &gt;&gt;&gt; 0;
+  return () =&gt; {
+    state = (state + 0x6d2b79f5) &gt;&gt;&gt; 0;
+    ...                        // thuật toán mulberry32
+  };
+}
+const random = createRandom(2026);   // lần nào chạy cũng ra đúng 3.004 review giống nhau</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> hiển thị <code>new Date().toLocaleString()</code> hoặc <code>Math.random()</code> trực tiếp trong JSX của một component được render trên server.</p>
+</div>
+
+<div class="concept">
+<h3>Bonus: Tailwind v4 khai báo theme ngay trong CSS</h3>
+<p>Tailwind v4 không còn file <code>tailwind.config.js</code>. Màu được khai báo trong <code>@theme</code>, và mỗi biến tự sinh ra class tương ứng.</p>
+<p class="file">src/app/globals.css</p>
+<pre><code>@theme {
+  --color-accent: #2a78d6;        /* → bg-accent, text-accent, border-accent/40 ... */
+  --color-accent-soft: #eaf2fc;   /* → bg-accent-soft */
+}</code></pre>
+<p>Dashboard chỉ dùng <b>một màu nhấn</b> (xanh dương) cho mọi thứ mang nghĩa “cơ hội”: hạng 1, vùng cơ hội trên scatter, nhóm pain point dễ sửa. Mọi thứ khác dùng màu xám. Nhờ vậy mắt người xem được dẫn thẳng tới điều quan trọng.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="vi-sao">4. Vì sao chọn cách này</h2>
+<table>
+  <tr><th>Quyết định</th><th>Phương án đã bỏ</th><th>Lý do</th></tr>
+  <tr><td>ECharts cài bằng npm</td><td>Nạp qua CDN</td><td>Trong Next.js, cài npm thì có kiểu TypeScript và được đóng gói chung với app, gọn hơn thẻ &lt;script&gt;.</td></tr>
+  <tr><td>Heatmap bằng bảng HTML</td><td>Heatmap của ECharts</td><td>Cần tiêu đề nhóm cột (<code>colSpan</code>), và mỗi ô là một nút bấm được bằng bàn phím.</td></tr>
+  <tr><td>Tự viết hàm đặt nhãn cho scatter</td><td><code>moveOverlap</code> có sẵn của ECharts</td><td>Hàm có sẵn không xử lý được hai nhãn quay mặt vào nhau (“Launcher” đè “Đọc PDF”).</td></tr>
+  <tr><td>Điểm cơ hội tính ở frontend</td><td>Tính ở backend</td><td>Thanh trượt phải cập nhật tức thì. 8 lĩnh vực thì tính trên trình duyệt chỉ mất vài mili-giây.</td></tr>
+  <tr><td>Một <code>dataSource.ts</code> duy nhất</td><td>Mỗi component tự import dữ liệu</td><td>Đổi sang dữ liệu thật chỉ cần sửa 1 file.</td></tr>
+</table>
+<p class="tip"><b>Hạn chế cần nhớ:</b> “Tỉ lệ 1–2★” lấy từ histogram (tính trên toàn bộ lịch sử app), nên <b>không</b> đổi theo bộ lọc 3/6/12 tháng. Các chỉ số tính từ review (pain point, mong muốn) thì có đổi theo bộ lọc.</p>
+
+<!-- ===================================================================== -->
+<h2 id="tu-kiem-tra">5. Tự kiểm tra</h2>
+
+<details>
+  <summary>Câu 1. Vì sao <code>page.tsx</code> không cần <code>"use client"</code> còn <code>Dashboard.tsx</code> thì cần?</summary>
+  <p><code>page.tsx</code> chỉ trả về JSX, không có state hay sự kiện. <code>Dashboard.tsx</code> dùng <code>useState</code> và <code>onClick</code>, mà hai thứ này chỉ chạy được trên trình duyệt.</p>
+</details>
+
+<details>
+  <summary>Câu 2. Kéo thanh “Nhu cầu” từ 40 lên 80 (hai thanh kia giữ nguyên 35 và 25). Trọng số thực tế của Nhu cầu là bao nhiêu %?</summary>
+  <p>80 / (80 + 35 + 25) = 80 / 140 ≈ <b>57%</b>. Hàm <code>normalizeWeights</code> thực hiện phép chia này.</p>
+</details>
+
+<details>
+  <summary>Câu 3. Nếu bỏ <code>Math.log10</code> trong điểm nhu cầu, lĩnh vực “Ghi chú/ghi âm AI” (2,6 triệu) sẽ ra sao so với hiện tại?</summary>
+  <p>Nó vẫn là 0 vì đang thấp nhất. Thay đổi lớn nằm ở các lĩnh vực tầm trung. Ví dụ “Khôi phục dữ liệu” (17,5 triệu) đang có điểm nhu cầu khoảng <b>0,56</b> nhờ log. Bỏ log thì chỉ còn (17,5 − 2,6) / (76,5 − 2,6) ≈ <b>0,20</b>, vì thang tuyến tính bị các lĩnh vực 76 triệu chi phối.</p>
+</details>
+
+<details>
+  <summary>Bài tập 4. Thêm cột “Có quảng cáo” vào bảng ⑤ (CompetitorTable).</summary>
+  <p>Gợi ý: dữ liệu đã có trong <code>app.containsAds</code>. Thêm một <code>&lt;th&gt;</code> trong <code>&lt;thead&gt;</code> và một <code>&lt;td&gt;</code> trong vòng <code>.map()</code>. Không cần sửa file nào khác, vì đó chính là lợi ích của interface đã có sẵn trường.</p>
+</details>
+
+<details>
+  <summary>Bài tập 5. Thêm lựa chọn “1 tháng” vào bộ lọc thời gian.</summary>
+  <p>Sửa kiểu <code>MonthsRange</code> trong <code>analytics.ts</code> thành <code>1 | 3 | 6 | 12</code>, rồi thêm <code>1</code> vào mảng <code>MONTH_OPTIONS</code> trong <code>HeaderBar.tsx</code>. TypeScript sẽ chỉ cho bạn những chỗ còn lại cần sửa (nếu có).</p>
+</details>
+
+<!-- ===================================================================== -->
+<h2 id="doc-them">6. Đọc thêm</h2>
+<ul>
+  <li><a href="https://nextjs.org/docs/app/getting-started/server-and-client-components">Next.js — Server and Client Components</a></li>
+  <li><a href="https://react.dev/learn/sharing-state-between-components">React — Sharing State Between Components</a> (lifting state up)</li>
+  <li><a href="https://react.dev/learn/you-might-not-need-an-effect">React — You Might Not Need an Effect</a> (vì sao không lưu dữ liệu phái sinh vào state)</li>
+  <li><a href="https://echarts.apache.org/en/option.html">ECharts — Tài liệu option</a></li>
+</ul>
+
+</main>
+</body>
+</html>

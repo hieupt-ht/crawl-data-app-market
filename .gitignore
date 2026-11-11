@@ -1,41 +1,14 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
+# Bỏ qua file sinh ra khi build/cài đặt và file bí mật — dùng chung cho cả frontend và backend
+node_modules/
+.next/
+*.tsbuildinfo
 .env*
 
-# vercel
-.vercel
+# Backend Python
+backend/.venv/
+backend/db.sqlite3
+__pycache__/
+.pytest_cache/
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Thư mục làm việc tạm của công cụ AI
+.superpowers/
