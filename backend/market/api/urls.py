@@ -14,4 +14,9 @@ urlpatterns = [
         views.developer_account_detail,
         name="developer-account-detail",
     ),
+    # Lần cào, trạng thái cào, nhận dữ liệu
+    path("crawl-runs/", views.crawl_run_create, name="crawl-run-create"),
+    path("crawl-runs/<int:run_id>/", views.crawl_run_update, name="crawl-run-update"),
+    path("crawl-state/", views.crawl_state, name="crawl-state"),
+    path("ingest/app/", views.ingest_app, name="ingest-app"),
 ]

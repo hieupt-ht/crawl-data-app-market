@@ -10,7 +10,7 @@ Lỗi kiểm tra được DRF tự trả về dạng `400 {"tên_trường": ["t
 from django.utils.text import slugify
 from rest_framework import serializers
 
-from market.models import Company, DeveloperAccount
+from market.models import Company, CrawlRun, DeveloperAccount
 
 # ---------------------------------------------------------------------------
 # Công ty và tài khoản developer
@@ -112,3 +112,96 @@ class DeveloperAssignmentSerializer(serializers.Serializer):
             )
             return company
         return None
+
+
+# ---------------------------------------------------------------------------
+# Lần cào (crawl run) và trạng thái cào
+# ---------------------------------------------------------------------------
+
+STAR_LEVELS = 5
+
+
+def validate_run_exists(run_id: int) -> int:
+    """Mọi dữ liệu cào gửi lên phải thuộc một lần cào đã mở bằng POST /api/crawl-runs/."""
+    if not CrawlRun.objects.filter(id=run_id).exists():
+        raise serializers.ValidationError(f"Không có lần cào với id {run_id}. Hãy mở lần cào trước.")
+    return run_id
+
+
+class CrawlRunCreateSerializer(serializers.ModelSerializer):
+    """Mở một lần cào: cào cả studio hay một app, và đích là gì (link hoặc appId)."""
+
+    class Meta:
+        model = CrawlRun
+        fields = ["trigger", "target"]
+
+
+class CrawlRunUpdateSerializer(serializers.Serializer):
+    """Extension gửi thống kê, lỗi, và báo đã cào xong."""
+
+    stats = serializers.DictField(required=False)
+    errors = serializers.ListField(required=False)
+    finished = serializers.BooleanField(required=False, default=False)
+
+
+class CrawlStateQuerySerializer(serializers.Serializer):
+    """Tham số trên URL của GET /api/crawl-state/."""
+
+    app_id = serializers.CharField(max_length=255)
+    lang = serializers.ChoiceField(choices=["vi", "en"])
+    score = serializers.ChoiceField(choices=[1, 2], required=False)
+
+
+# ---------------------------------------------------------------------------
+# Nhận thông tin app
+# ---------------------------------------------------------------------------
+
+
+class DeveloperPayloadSerializer(serializers.Serializer):
+    """Phần "developer" — dòng chữ xanh dưới tên app trên Google Play."""
+
+    play_developer_id = serializers.CharField(max_length=255)
+    display_name = serializers.CharField(max_length=255)
+    play_url = serializers.URLField(max_length=500, required=False, allow_blank=True)
+
+
+class AppPayloadSerializer(serializers.Serializer):
+    """Phần "app" — thông tin đọc được trên trang chi tiết app."""
+
+    id = serializers.CharField(max_length=255)
+    title = serializers.CharField(max_length=255)
+    category = serializers.CharField(max_length=100, required=False, allow_blank=True, default="")
+    is_game = serializers.BooleanField()
+    installs_label = serializers.CharField(max_length=50)
+    min_installs = serializers.IntegerField(min_value=0)
+    score = serializers.FloatField(min_value=0, max_value=5)
+    ratings = serializers.IntegerField(min_value=0)
+    # Gửi một trong hai: số lượt thật của 5 mức sao, hoặc % độ dài 5 thanh (phần tử [0] là 1★)
+    star_histogram = serializers.ListField(
+        child=serializers.IntegerField(min_value=0),
+        min_length=STAR_LEVELS,
+        max_length=STAR_LEVELS,
+        required=False,
+    )
+    star_percentages = serializers.ListField(
+        child=serializers.FloatField(min_value=0, max_value=100),
+        min_length=STAR_LEVELS,
+        max_length=STAR_LEVELS,
+        required=False,
+    )
+    contains_ads = serializers.BooleanField()
+    offers_iap = serializers.BooleanField()
+    description = serializers.CharField(required=False, allow_blank=True, default="")
+
+    def validate(self, data: dict) -> dict:
+        if "star_histogram" not in data and "star_percentages" not in data:
+            raise serializers.ValidationError("Cần gửi star_histogram (5 số lượt) hoặc star_percentages (5 số %).")
+        return data
+
+
+class IngestAppSerializer(serializers.Serializer):
+    """Toàn bộ body của POST /api/ingest/app/."""
+
+    run_id = serializers.IntegerField(validators=[validate_run_exists])
+    developer = DeveloperPayloadSerializer()
+    app = AppPayloadSerializer()

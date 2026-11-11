@@ -9,7 +9,7 @@ import datetime
 
 import pytest
 
-from market.models import App, Company, DeveloperAccount, Review
+from market.models import App, Company, CrawlRun, DeveloperAccount, Review
 
 
 @pytest.fixture
@@ -93,3 +93,45 @@ def make_review(db):
         return review
 
     return create
+
+
+@pytest.fixture
+def run_id(db) -> int:
+    """id của một lần cào đang mở — mọi request ingest đều phải kèm run_id."""
+    return CrawlRun.objects.create(trigger="app", target="com.apero.pdfreader").id
+
+
+@pytest.fixture
+def payload_for(run_id):
+    """
+    Trả hàm dựng body `POST /api/ingest/app/` giống extension gửi, lấy số liệu từ một app có sẵn.
+    Truyền thêm trường để ghi đè, ví dụ `payload_for(app, title="Tên mới")`.
+    """
+
+    def build(app: App, **app_overrides) -> dict:
+        developer = app.developer_account
+        app_fields = {
+            "id": app.id,
+            "title": app.title,
+            "category": app.category,
+            "is_game": app.is_game,
+            "installs_label": app.installs_label,
+            "min_installs": app.min_installs,
+            "score": app.score,
+            "ratings": app.ratings,
+            "star_histogram": app.star_histogram,
+            "contains_ads": app.contains_ads,
+            "offers_iap": app.offers_iap,
+            "description": app.description,
+        }
+        app_fields.update(app_overrides)
+        return {
+            "run_id": run_id,
+            "developer": {
+                "play_developer_id": developer.play_developer_id,
+                "display_name": developer.display_name,
+            },
+            "app": app_fields,
+        }
+
+    return build

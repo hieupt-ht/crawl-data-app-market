@@ -6,13 +6,25 @@ Kiểm tra dữ liệu nằm trong `serializers.py`, logic xử lý nằm trong 
 """
 
 from django.db.models.functions import Lower
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from market.models import Company, DeveloperAccount
+from market.models import Company, CrawlRun, DeveloperAccount
+from market.services.crawl_runs import get_crawl_state, update_crawl_run
+from market.services.ingest import upsert_app
+from market.services.scope import is_in_scope
 
-from .serializers import CompanySerializer, DeveloperAccountSerializer, DeveloperAssignmentSerializer
+from .serializers import (
+    CompanySerializer,
+    CrawlRunCreateSerializer,
+    CrawlRunUpdateSerializer,
+    CrawlStateQuerySerializer,
+    DeveloperAccountSerializer,
+    DeveloperAssignmentSerializer,
+    IngestAppSerializer,
+)
 
 
 @api_view(["GET"])
@@ -54,3 +66,60 @@ def developer_account_assign(request: Request) -> Response:
     serializer.is_valid(raise_exception=True)
     developer = serializer.save()
     return Response(DeveloperAccountSerializer(developer).data)
+
+
+# ---------------------------------------------------------------------------
+# Lần cào và trạng thái cào
+# ---------------------------------------------------------------------------
+
+
+@api_view(["POST"])
+def crawl_run_create(request: Request) -> Response:
+    """Mở một lần cào, trả id để extension gửi kèm mọi dữ liệu sau đó."""
+    serializer = CrawlRunCreateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    run = serializer.save()
+    return Response({"id": run.id}, status=201)
+
+
+@api_view(["PATCH"])
+def crawl_run_update(request: Request, run_id: int) -> Response:
+    """Ghi thống kê/lỗi và đóng lần cào khi extension gửi `finished: true`."""
+    run = get_object_or_404(CrawlRun, id=run_id)
+    serializer = CrawlRunUpdateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    run = update_crawl_run(run, data.get("stats"), data.get("errors"), data["finished"])
+    return Response({"id": run.id, "finished_at": run.finished_at})
+
+
+@api_view(["GET"])
+def crawl_state(request: Request) -> Response:
+    """Review mới nhất đã lưu của app ở một lượt cào — extension cuộn tới đó thì dừng."""
+    # request.query_params: các tham số sau dấu ? trên URL
+    serializer = CrawlStateQuerySerializer(data=request.query_params)
+    serializer.is_valid(raise_exception=True)
+    query = serializer.validated_data
+    return Response(get_crawl_state(query["app_id"], query["lang"], query.get("score")))
+
+
+# ---------------------------------------------------------------------------
+# Nhận dữ liệu cào
+# ---------------------------------------------------------------------------
+
+
+@api_view(["POST"])
+def ingest_app(request: Request) -> Response:
+    """Lưu thông tin một app; trả cho popup biết app có trong phạm vi dashboard không."""
+    serializer = IngestAppSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    app = upsert_app(data["app"], data["developer"], raw_payload=request.data)
+    return Response(
+        {
+            "app_id": app.id,
+            "in_scope": is_in_scope(app),
+            "skipped_reason": app.skipped_reason,
+            "developer_status": app.developer_account.status,
+        }
+    )
