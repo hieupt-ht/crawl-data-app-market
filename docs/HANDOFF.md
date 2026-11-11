@@ -70,14 +70,14 @@ Hợp đồng dữ liệu (backend phải trả đúng hình dạng này): `fron
   `backend/04-khung-django-va-models.html`, `backend/05-api-nhan-du-lieu-cao.html`, `backend/06-dashboard-va-gan-nhan.html`. Mỗi đợt backend có code viết 1 bài.
 - Kiểm tra frontend: `cd frontend && npx tsc --noEmit && npm run lint && npm run build`.
 - Kiểm tra backend: `cd backend && .venv/Scripts/python -m pytest && .venv/Scripts/python manage.py check`.
-- Git: repo ở thư mục gốc (đã chuyển từ `frontend/`). `master` = frontend; backend làm trên nhánh **`feat/backend-django`**. Chưa có remote GitHub.
+- Git: repo ở thư mục gốc (đã chuyển từ `frontend/`). Nhánh chính là `main` (đổi tên từ `master`); backend làm trên nhánh **`feat/backend-django`**. Remote: `origin` = https://github.com/hieupt-ht/crawl-data-app-market (máy chưa cài `gh`, tạo PR bằng tay trên web).
 - Kiểm thử trình duyệt trước đây dùng script puppeteer-core tạm (không nằm trong repo) với Chrome tại
   `C:\Program Files\Google\Chrome\Application\chrome.exe`.
 
 ## 5. Việc còn dang dở / câu hỏi mở
 1. ~~3 thanh trượt khó hiểu~~ → ĐÃ XONG (xem mục 3). Ý tưởng để ngỏ nếu cần: chỉ xếp hạng lĩnh vực có lượt tải ≥ ngưỡng (vd 10 Tr).
 2. ~~Toàn cầu hay Việt Nam~~ → ĐÃ CHỐT: cào cả hai lượt vi + en.
-3. ~~Backend theo đợt~~ → ĐÃ XONG đợt 1–4 (xem mục 3b). Đã review toàn nhánh (reviewer độc lập) và sửa 2 lỗi C1/I1; 8 lỗi nhỏ để ngỏ trong sổ tiến độ. Còn: merge vào `master`.
+3. ~~Backend theo đợt~~ → ĐÃ XONG đợt 1–4 (xem mục 3b). Đã review toàn nhánh (reviewer độc lập) và sửa 2 lỗi C1/I1; 8 lỗi nhỏ để ngỏ trong sổ tiến độ. Còn: merge PR `feat/backend-django` → `main`.
    Sổ tiến độ (không commit): `.superpowers/sdd/2026-11-11-backend-django/progress.md` — các "Ruling" đã quyết.
 4. **Việc tiếp theo**: kế hoạch riêng cho **extension Chrome** (bước 0: khảo sát DOM Google Play bằng tay), rồi nối frontend
    (`lib/dataSource.ts` gọi `/api/dashboard/`), rồi gắn nhãn LLM.
