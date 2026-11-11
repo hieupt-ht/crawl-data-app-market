@@ -47,7 +47,7 @@
 <main>
 
 
-<p class="meta">Bài 03 · 11/11/2026 · Thời gian đọc ~15 phút · <a href="index.html">← Mục lục</a></p>
+<p class="meta">Bài 03 · 11/11/2026 · Thời gian đọc ~15 phút · <a href="../index.html">← Mục lục</a></p>
 <h1>Bỏ thanh trượt trọng số: dashboard để đọc, không phải để chỉnh</h1>
 <p class="lead">3 thanh trượt Nhu cầu / Mức bất mãn / Độ dễ sửa làm chính người viết ra chúng cũng thấy khó hiểu.
 Hôm nay mình bỏ chúng đi, thay điểm 0–100 bằng 3 thanh ghi <b>số thật</b> (rê chuột vào thì ra số chi tiết),
@@ -58,7 +58,7 @@ và xếp hạng lĩnh vực theo một tiêu chí ai cũng hiểu: <b>% đánh 
   <ol>
     <li><a href="#lam-gi">Hôm nay làm gì & cách chạy</a></li>
     <li><a href="#ban-do-file">Bản đồ file</a></li>
-    <li><a href="#kien-thuc">Kiến thức chính (8 khái niệm)</a></li>
+    <li><a href="#kien-thuc">Kiến thức chính (9 khái niệm)</a></li>
     <li><a href="#vi-sao">Vì sao chọn cách này</a></li>
     <li><a href="#tu-kiem-tra">Tự kiểm tra</a></li>
     <li><a href="#doc-them">Đọc thêm</a></li>
@@ -212,6 +212,24 @@ Phần tính toán nằm trong <code>lib/</code>, component chỉ lo vẽ.</p>
 <p class="pitfall"><b>Lỗi hay gặp:</b> donut 10–15 lát, hoặc donut cho dữ liệu không cộng lại thành 100%. Ở đây 100% là “số review <i>có nêu</i> mong muốn” (1.654), không phải tất cả 3.004 review. Vì vậy con số ở giữa vòng ghi riêng là “55% review có nêu mong muốn”.</p>
 </div>
 
+<div class="concept">
+<h3>3.9. Chữ rõ nét: font, cỡ chữ và độ tương phản (contrast) đo bằng máy</h3>
+<p><b>Độ tương phản</b> là tỉ số độ sáng giữa chữ và nền, từ 1:1 (cùng màu) đến 21:1 (đen trên trắng). Chuẩn WCAG AA yêu cầu chữ thường đạt <b>≥ 4,5:1</b>.
+Không nên đoán bằng mắt, mà nên đo. Mình viết script mở trang, lấy từng đoạn chữ, tìm <b>màu nền thật nằm ngay dưới chữ</b> bằng <code>document.elementsFromPoint</code>, tính cả opacity, rồi báo mọi chỗ dưới 4,5:1.
+Script bắt được 3 lỗi mà mắt thường dễ bỏ qua: chữ xám trên nền trang xám (4,3:1), dấu “–” xám nhạt trong heatmap (2,6:1), và các dòng heatmap bị làm mờ 45% khi chọn lĩnh vực (2,9:1).</p>
+<p class="file">frontend/src/app/globals.css</p>
+<pre><code>@theme {
+  --color-ink-2: #475569; /* chữ phụ: 7,6:1 */
+  --color-muted: #64748b; /* 4,8:1 trên trắng — CHỈ đặt trên nền trắng */
+  --text-xs: 0.8125rem;   /* đổi text-xs từ 12px lên 13px cho cả dự án */
+}
+@theme inline {           /* "inline" vì giá trị là biến do next/font tạo lúc chạy */
+  --font-sans: var(--font-be-vietnam-pro), Inter, system-ui, sans-serif;
+}</code></pre>
+<p>Biểu đồ ECharts vẽ trên <b>canvas</b>. Canvas không đọc CSS, nên không tự dùng font Be Vietnam Pro. <code>EChart.tsx</code> xử lý bằng cách đọc font thật của trang (<code>getComputedStyle</code>) rồi gắn vào biểu đồ, sau đó vẽ lại một lần khi font tải xong (<code>document.fonts.ready</code>).</p>
+<p class="pitfall"><b>Lỗi hay gặp:</b> dùng <code>opacity</code> để làm mờ phần không được chọn. Opacity làm mờ cả chữ, nên tương phản tụt mạnh. Muốn làm nổi bật một dòng thì nên tô viền hoặc nền cho dòng đó thay vì làm mờ các dòng khác.</p>
+</div>
+
 <!-- ===================================================================== -->
 <h2 id="vi-sao">4. Vì sao chọn cách này</h2>
 <table>
@@ -224,6 +242,7 @@ Phần tính toán nằm trong <code>lib/</code>, component chỉ lo vẽ.</p>
   <tr><td>Một màu xanh nhạt cho cả 3 thanh</td><td>3 màu khác nhau như bản vẽ thử</td><td>Tuân theo quy tắc “chỉ một màu nhấn” trong <code>globals.css</code>. Tiêu đề cột đã phân biệt được các thanh.</td></tr>
   <tr><td>④ Top mong muốn: donut top 5 + “Khác”</td><td>Giữ cột ngang; treemap</td><td>Bạn muốn thấy tỉ trọng và trang đa dạng hơn. Treemap thể hiện được nhiều mục hơn, nhưng donut quen mắt nên ai xem cũng đọc được ngay. <b>Đánh đổi:</b> lát “Khác” khá to (39%), bù lại bằng cách rê chuột vào thì ra danh sách đầy đủ.</td></tr>
   <tr><td>Bảng màu xám <b>lạnh</b>, thẻ trắng hẳn, chữ phụ đậm hơn</td><td>Xám ngả vàng/nâu (<code>#f4f4f1</code>, <code>#898781</code>)</td><td>Xám ngả vàng làm cả trang trông “mờ mờ tối tối”. Chữ chú thích cũ chỉ đạt tương phản ~3,5:1. Màu mới <code>#6b7280</code> đạt 4,8:1 (chuẩn WCAG là ≥ 4,5:1). Chỉ cần sửa 2 chỗ (<code>globals.css</code>, <code>chartTheme.ts</code>), vì mọi component đều dùng màu qua biến chứ không ghi cứng mã màu.</td></tr>
+  <tr><td>Theo spec “rõ nét”: Be Vietnam Pro, bảng màu slate, chữ ≥ 13px, mọi chữ ≥ 4,5:1</td><td>—</td><td>Có <b>3 chỗ lệch spec</b>, chọn theo yêu cầu cao hơn: (1) dấu “–” ở ô heatmap trống dùng <code>#64748b</code> trên nền trắng thay cho <code>#94a3b8</code>, vì màu trong spec chỉ đạt 2,6:1. (2) Không làm mờ các dòng heatmap khi chọn lĩnh vực nữa, mà viền dòng đang chọn. (3) Tiêu đề cột heatmap để 12px (mức tối thiểu), vì ở 13px chữ “Quảng” bị ngắt làm đôi.</td></tr>
 </table>
 
 <!-- ===================================================================== -->

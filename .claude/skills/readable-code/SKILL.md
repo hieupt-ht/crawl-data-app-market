@@ -29,6 +29,13 @@ và *vì sao* làm vậy — không cần hỏi lại.
 ## 4. TypeScript / Python
 - TS: khai báo `interface` cho mọi dữ liệu đi qua nhiều file (để trong `lib/types.ts`). Không dùng `any`; nếu buộc phải ép kiểu thì dùng `unknown` + `as` và comment lý do.
 - Python/Django: type hints cho hàm, docstring tiếng Việt ngắn, tuân PEP 8.
+- Python cho người mới:
+  - Ưu tiên vòng `for` rõ ràng hơn list comprehension lồng nhau hay one-liner dài; comprehension chỉ dùng khi một dòng đọc được.
+  - Khái niệm Django lần đầu xuất hiện trong file thì comment 1 dòng: QuerySet (truy vấn lười, chưa chạy ngay),
+    `select_related`/`prefetch_related` (gom truy vấn, tránh N+1), `transaction.atomic()` (lỗi giữa chừng thì không lưu gì),
+    serializer (kiểm tra + chuyển dữ liệu JSON ↔ Python), migration, `get_or_create`/`update_or_create`.
+  - View mỏng: view chỉ nhận request → gọi hàm trong `services/` → trả response. Logic để trong `services/`.
+  - Thông báo lỗi trả về cho người dùng bằng tiếng Việt, nói rõ sai ở đâu ("Review thứ 3: score phải là 1 hoặc 2").
 
 ## 5. Trước khi báo xong
 - Chạy kiểm tra: `npx tsc --noEmit` và `npm run lint` (frontend); `python -m pytest` / `python manage.py check` (backend).
