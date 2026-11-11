@@ -1,4 +1,4 @@
-# Bàn giao bối cảnh — App Opportunity Finder (cập nhật 11/11/2026)
+# Bàn giao bối cảnh — App Opportunity Finder (cập nhật 11/11/2026, backend xong)
 
 File này tóm tắt các phiên chat trước để chat mới nắm được bối cảnh. Đọc cùng `CLAUDE.md`.
 
@@ -12,13 +12,23 @@ File này tóm tắt các phiên chat trước để chat mới nắm được b
 ## 2. Công nghệ đã chốt
 - Frontend: **Next.js 16 (App Router) + TypeScript + Tailwind v4 + ECharts** (cài qua npm) — thư mục `frontend/`.
   Lưu ý Next 16 khác bản cũ: `params` là Promise, bật `cacheComponents`; đọc docs trong `frontend/node_modules/next/dist/docs/`.
-- Backend (CHƯA LÀM): **Python Django** — thư mục `backend/`.
-- Cào dữ liệu: thư viện **google-play-scraper** (không phải API chính thức, là cào không cần trình duyệt).
-  - Bản Python **không có** hàm lấy danh sách app theo nhà phát triển → dùng bản Node `developer()`, hoặc đọc link `<a>` trên trang studio, hoặc lập danh sách tay.
-  - Lấy được: title, installs/minInstalls, score, ratings, **histogram** (để tính % 1–2★), containsAds, offersIAP, description, reviews (lọc theo sao, sort NEWEST, có thumbsUpCount).
-  - KHÔNG có sẵn: domain chi tiết, tính năng chính, pain point → cần **LLM gắn nhãn**.
+- Backend: **Django 5.2 + DRF + SQLite** (sau này đổi PostgreSQL; **không dùng MongoDB**) — thư mục `backend/`.
+- Cào dữ liệu: **ĐỔI HƯỚNG (11/11)** — KHÔNG dùng thư viện google-play-scraper nữa. Tự cào bằng **extension Chrome**
+  đọc thẻ HTML ngay trong trình duyệt (bấm "Xem tất cả bài đánh giá", cuộn, đọc DOM) rồi gửi JSON về Django.
+- Thiết kế đầy đủ (ĐÃ DUYỆT): `docs/superpowers/specs/2026-11-11-crawler-backend-design.md`.
+  Kế hoạch backend 9 task: `docs/superpowers/plans/2026-11-11-backend-django.md`.
+- Các quyết định đã chốt trong thiết kế:
+  - Nút **"Cào studio này"** (đi theo link `<a>` app trên trang developer, **chỉ 1 tầng**) và **"Cào app này"** (làm trước).
+  - Mỗi app cào **2 lượt**: tiếng Việt `hl=vi&gl=VN` và tiếng Anh `hl=en&gl=US` (→ câu hỏi toàn cầu/VN đã chốt: lấy cả hai).
+  - Dừng cuộn khi review > **12 tháng** hoặc đủ **500 review 1–2★**/lượt; lần sau chỉ lấy review mới. Không realtime.
+  - **Tài khoản developer** (tên người đăng app trên Google Play) ≠ **công ty**: một studio có nhiều tài khoản.
+    Gán 1 lần; khi "Cào studio này" gặp tài khoản lạ, popup hỏi "Tài khoản này thuộc công ty nào?".
+  - App của developer nước ngoài: **lưu nhưng ẩn** khỏi dashboard (`?include_foreign=1` để bật).
+  - Gắn nhãn: **từ khóa trước** (miễn phí), LLM sau khi có API key và nếu độ đúng < 70%. **Không cần RAG.**
+  - Chạy extension trong Chrome profile riêng không đăng nhập Google; nghỉ ngẫu nhiên giữa các app.
+  - Ý tưởng chưa chốt: nút "Cập nhật tất cả" (cào lại mọi app đã lưu) — bàn khi làm extension.
 
-## 3. Đã làm xong (dữ liệu giả, chưa có backend)
+## 3. Frontend đã làm xong (dữ liệu giả)
 **Trang Overview `/`**
 - Header + bộ lọc (công ty, 3/6/12 tháng, ngôn ngữ review), 4 ô KPI.
 - ① Bảng xếp hạng lĩnh vực: 3 cột thanh ngang ghi số thật — Lượt tải · % 1–2★ · % chê quảng cáo/giá (dễ sửa);
@@ -37,16 +47,39 @@ File này tóm tắt các phiên chat trước để chat mới nắm được b
 Cuối file có ghi chú cách thay bằng `apps.csv` / `reviews.csv` thật. Chỉ cần sửa `lib/dataSource.ts` khi đổi nguồn.
 Hợp đồng dữ liệu (backend phải trả đúng hình dạng này): `frontend/src/lib/types.ts` → `DashboardData`.
 
+- Giao diện (11/11): font **Be Vietnam Pro** (next/font), bảng màu slate trong `globals.css` + `chartTheme.ts` (phải giữ trùng nhau),
+  `text-xs` = 13px. Quy tắc: mọi chữ ≥ 4,5:1 so với nền thật, không chữ nào < 12px.
+  Script kiểm tra tương phản (puppeteer, ngoài repo) đã chạy: 0 lỗi trên Overview, Overview khi chọn lĩnh vực, trang app.
+
+## 3b. Backend đã làm xong (nhánh `feat/backend-django`)
+- Cách chạy, bảng API, lệnh: **`backend/README.md`**. Bài học: `docs/learning/backend/04`, `05`, `06`.
+- Một Django app `market`: `models.py` (9 bảng), `api/` (serializer + view mỏng), `services/` (ingest, crawl_runs, dashboard, labeling),
+  `labeling/` (hàm thuần gắn nhãn từ khóa — chỗ sau này thay bằng LLM), `management/commands/` (`label_data`, `sample_labels`).
+- Luồng: extension `POST /api/crawl-runs/` → `/api/ingest/app/` → `GET /api/crawl-state/` → `/api/ingest/reviews/` (≤100/đợt)
+  → `PATCH /api/crawl-runs/<id>/`; rồi chạy `manage.py label_data`; Next.js đọc `GET /api/dashboard/`.
+- Quy tắc đã cài và có test: gửi lại review không sinh trùng (giữ bản thấy đầu, kể cả giữa lượt vi/en); cào lại không xóa công ty đã gán
+  hay lĩnh vực/nhãn sửa tay; cả đợt review bị từ chối nếu một phần tử sai; app chưa gán công ty Việt bị ẩn trừ khi `?include_foreign=1`
+  (khi đó `companyId = "dev:<play_developer_id>"`); dashboard chỉ có app đã có lĩnh vực + review đã gắn nhãn.
+- Hạn chế đã biết: gắn nhãn từ khóa không hiểu phủ định ("không có quảng cáo" vẫn ra `ads`); review gõ có dấu được so có dấu (tránh "do"="đơ", "chấm"="chậm"), review gõ không dấu thì vẫn có thể nhầm;
+  hai request review giống hệt chạy cùng lúc có thể trả 500 (extension gửi tuần tự nên chưa xử lý).
+- Thử Windows Git Bash: `curl -d` có tiếng Việt bị sai mã hóa → ghi JSON ra file UTF-8 rồi `--data-binary @file.json`.
+
 ## 4. Quy ước
-- Skill dự án trong `.claude/skills/`: `readable-code` (khi viết code) và `learning-notes` (cuối phiên có sửa code → viết `docs/learning/NN-*.html` + cập nhật `index.html`).
-- Đã có bài học: `01-dashboard-overview.html`, `02-trang-chi-tiet-app.html`, `03-bo-thanh-truot-trong-so.html`.
-- Kiểm tra: `cd frontend && npx tsc --noEmit && npm run lint && npm run build`.
+- Skill dự án trong `.claude/skills/`: `readable-code` (khi viết code) và `learning-notes` (cuối phiên có sửa code → viết `docs/learning/frontend/NN-*.html` hoặc `docs/learning/backend/NN-*.html` + cập nhật `index.html`; số bài đánh liên tục giữa hai thư mục).
+- Đã có bài học: `frontend/01-dashboard-overview.html`, `frontend/02-trang-chi-tiet-app.html`, `frontend/03-bo-thanh-truot-trong-so.html`,
+  `backend/04-khung-django-va-models.html`, `backend/05-api-nhan-du-lieu-cao.html`, `backend/06-dashboard-va-gan-nhan.html`. Mỗi đợt backend có code viết 1 bài.
+- Kiểm tra frontend: `cd frontend && npx tsc --noEmit && npm run lint && npm run build`.
+- Kiểm tra backend: `cd backend && .venv/Scripts/python -m pytest && .venv/Scripts/python manage.py check`.
+- Git: repo ở thư mục gốc (đã chuyển từ `frontend/`). Nhánh chính là `main` (đổi tên từ `master`); backend làm trên nhánh **`feat/backend-django`**. Remote: `origin` = https://github.com/hieupt-ht/crawl-data-app-market (máy chưa cài `gh`, tạo PR bằng tay trên web).
 - Kiểm thử trình duyệt trước đây dùng script puppeteer-core tạm (không nằm trong repo) với Chrome tại
   `C:\Program Files\Google\Chrome\Application\chrome.exe`.
 
 ## 5. Việc còn dang dở / câu hỏi mở
 1. ~~3 thanh trượt khó hiểu~~ → ĐÃ XONG (xem mục 3). Ý tưởng để ngỏ nếu cần: chỉ xếp hạng lĩnh vực có lượt tải ≥ ngưỡng (vd 10 Tr).
-2. **Chưa chốt**: lấy review của người dùng toàn cầu (chủ yếu tiếng Anh) hay chỉ người dùng Việt Nam → ảnh hưởng tham số `lang`/`country` khi cào.
-3. Backend Django + script cào chưa bắt đầu. `apps.csv` cần thêm cột histogram: `App` giờ cần `lowStarRatio`, `oneStarRatings` (histogram[0]), `twoStarRatings` (histogram[1]).
-4. `create-next-app` đã tạo **git riêng trong `frontend/`**; nên chuyển git ra thư mục gốc trước khi thêm `backend/`. Chưa commit gì.
+2. ~~Toàn cầu hay Việt Nam~~ → ĐÃ CHỐT: cào cả hai lượt vi + en.
+3. ~~Backend theo đợt~~ → ĐÃ XONG đợt 1–4 (xem mục 3b). Đã review toàn nhánh (reviewer độc lập) và sửa 2 lỗi C1/I1; 8 lỗi nhỏ để ngỏ trong sổ tiến độ. Còn: merge PR `feat/backend-django` → `main`.
+   Sổ tiến độ (không commit): `.superpowers/sdd/2026-11-11-backend-django/progress.md` — các "Ruling" đã quyết.
+4. **Việc tiếp theo**: kế hoạch riêng cho **extension Chrome** (bước 0: khảo sát DOM Google Play bằng tay), rồi nối frontend
+   (`lib/dataSource.ts` gọi `/api/dashboard/`), rồi gắn nhãn LLM.
 5. Hạn chế đã biết: `/apps/id-sai` hiện giao diện 404 nhưng mã HTTP vẫn 200 (giới hạn của Next 16 khi bật Cache Components).
+6. File `package-lock.json` rỗng ở thư mục gốc là rác, xóa được.

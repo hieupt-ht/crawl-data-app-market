@@ -8,34 +8,63 @@
   body { margin: 0; background: #f7f7f4; color: #1a1a19; font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
   main { max-width: 760px; margin: 0 auto; padding: 40px 20px; }
   h1 { margin: 0 0 4px; }
-  p.sub { color: #52514e; margin: 0 0 24px; }
+  h2 { margin: 32px 0 4px; font-size: 20px; }
+  p.sub { color: #52514e; margin: 0 0 8px; }
+  p.folder { color: #898781; font-size: 14px; margin: 0 0 8px; }
+  p.empty { color: #898781; font-style: italic; border: 1px dashed #e1e0d9; border-radius: 10px; padding: 14px 18px; margin: 10px 0; }
   a.lesson { display: block; background: #fff; border: 1px solid #e1e0d9; border-radius: 10px; padding: 14px 18px; margin: 10px 0; color: inherit; text-decoration: none; }
   a.lesson:hover { border-color: #2a78d6; }
   .no { color: #2a78d6; font-weight: 700; margin-right: 8px; }
   .date { color: #898781; font-size: 14px; float: right; }
   .desc { color: #52514e; font-size: 15px; margin-top: 4px; }
+  code { background: #ecebe5; padding: 1px 5px; border-radius: 4px; font-size: 14px; }
 </style>
 </head>
 <body>
 <main>
   <h1>Sổ tay học tập — App Opportunity Finder</h1>
-  <p class="sub">Mỗi phiên làm việc có một bài tổng hợp kiến thức. Đọc theo thứ tự.</p>
+  <p class="sub">Mỗi phiên làm việc có một bài tổng hợp kiến thức. Số bài đánh liên tục giữa hai phần; đọc theo thứ tự số.</p>
 
-  <a class="lesson" href="01-dashboard-overview.html">
+  <h2>Frontend — Next.js</h2>
+  <p class="folder">Thư mục <code>docs/learning/frontend/</code></p>
+
+  <a class="lesson" href="frontend/01-dashboard-overview.html">
     <span class="no">01</span><b>Dashboard Overview với Next.js, Tailwind và ECharts</b>
     <span class="date">10/11/2026</span>
     <div class="desc">Server/Client Component, state & luồng dữ liệu một chiều, useMemo, interface TypeScript, điểm cơ hội (log + min–max), bọc ECharts, dữ liệu giả có seed.</div>
   </a>
 
-  <a class="lesson" href="02-trang-chi-tiet-app.html">
+  <a class="lesson" href="frontend/02-trang-chi-tiet-app.html">
     <span class="no">02</span><b>Trang chi tiết app và “URL là trạng thái”</b>
     <span class="date">11/11/2026</span>
     <div class="desc">Dynamic route [appId], lưu bộ lọc trên URL, useSearchParams + Suspense, lỗi stale closure, Link vs replaceState, component được điều khiển.</div>
   </a>
-  <a class="lesson" href="03-bo-thanh-truot-trong-so.html">
+
+  <a class="lesson" href="frontend/03-bo-thanh-truot-trong-so.html">
     <span class="no">03</span><b>Bỏ thanh trượt trọng số: dashboard để đọc, không phải để chỉnh</b>
     <span class="date">11/11/2026</span>
     <div class="desc">Số thật thay điểm tổng hợp, tỉ lệ của tổng, xếp hạng bằng hàm thuần + Map, tooltip CSS với named group của Tailwind, Omit&lt;&gt; trong TypeScript.</div>
+  </a>
+
+  <h2>Backend — Django</h2>
+  <p class="folder">Thư mục <code>docs/learning/backend/</code></p>
+
+  <a class="lesson" href="backend/04-khung-django-va-models.html">
+    <span class="no">04</span><b>Khung Django và các bảng dữ liệu</b>
+    <span class="date">11/11/2026</span>
+    <div class="desc">Project vs app, venv, model & quan hệ (ForeignKey, ManyToMany), khóa chính chống trùng, migration & data migration, admin save_model, hàm thuần, pytest fixture “nhà máy”, CORS/CSRF.</div>
+  </a>
+
+  <a class="lesson" href="backend/05-api-nhan-du-lieu-cao.html">
+    <span class="no">05</span><b>API cho extension: gán công ty, nhận app, nhận review</b>
+    <span class="date">11/11/2026</span>
+    <div class="desc">DRF serializer (trường, validate(), lồng nhau, many=True), thông báo lỗi tiếng Việt có số thứ tự, upsert không ghi đè dữ liệu sửa tay, chống trùng review bằng bulk_create, “cả đợt hoặc không gì cả”.</div>
+  </a>
+
+  <a class="lesson" href="backend/06-dashboard-va-gan-nhan.html">
+    <span class="no">06</span><b>Dashboard API và gắn nhãn bằng từ khóa</b>
+    <span class="date">11/11/2026</span>
+    <div class="desc">Hợp đồng JSON với types.ts, lỗi N+1 và đếm truy vấn trong test, bảng trung gian ManyToMany, bỏ dấu bằng Unicode NFD, ranh giới từ , hàm thuần để sau thay bằng LLM, lệnh manage.py ghi theo lô.</div>
   </a>
 </main>
 </body>

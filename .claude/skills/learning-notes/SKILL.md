@@ -8,8 +8,15 @@ description: Use at the end of every work session in this project where code was
 Sau mỗi phiên có viết/sửa code, tạo **một file HTML** để bạn sinh viên đọc lại và học.
 
 ## Đặt file ở đâu
-- `docs/learning/NN-ten-ngan.html` (ở thư mục gốc dự án), `NN` là số thứ tự tăng dần: `01-dashboard-overview.html`, `02-...`.
-- Cập nhật `docs/learning/index.html` (mục lục): thêm 1 dòng gồm số, tên bài, ngày, 1 câu tóm tắt.
+- Chọn thư mục theo phần đã sửa trong phiên:
+  - `docs/learning/frontend/` — phiên làm Next.js (`frontend/`).
+  - `docs/learning/backend/` — phiên làm Django (`backend/`) hoặc extension cào dữ liệu.
+  - Phiên sửa cả hai: đặt vào thư mục của phần sửa nhiều hơn.
+- Tên file `NN-ten-ngan.html`. `NN` là số thứ tự **đánh liên tục cho cả hai thư mục**
+  (xem số lớn nhất trong `index.html` rồi cộng 1), ví dụ `frontend/03-...` rồi `backend/04-...`.
+- Link "← Mục lục" trong bài trỏ về `../index.html`.
+- Cập nhật `docs/learning/index.html` (mục lục): thêm 1 thẻ vào đúng phần Frontend / Backend,
+  gồm số, tên bài, ngày, 1 câu tóm tắt. Nếu phần Backend còn dòng "Chưa có bài" thì xóa dòng đó.
 
 ## Nội dung (theo thứ tự)
 1. **Hôm nay làm gì** — 3–5 dòng, kèm cách chạy thử (lệnh cụ thể).

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài 06 — Dashboard API và gắn nhãn bằng từ khóa</title>
+<style>
+  :root {
+    --ink: #1a1a19; --ink-2: #52514e; --muted: #898781; --line: #e1e0d9;
+    --page: #f7f7f4; --card: #ffffff; --accent: #2a78d6; --accent-soft: #eaf2fc;
+    --code-bg: #f3f2ee; --warn: #b35a00; --warn-soft: #fff4e5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.7 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 30px; line-height: 1.25; margin: 0 0 6px; }
+  h2 { font-size: 22px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 28px 0 8px; }
+  .lead { color: var(--ink-2); font-size: 17px; }
+  .meta { color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+  nav.toc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 20px; margin: 24px 0; }
+  nav.toc ol { margin: 6px 0; padding-left: 20px; }
+  .concept { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 22px 14px; margin: 18px 0; }
+  .concept h3 { margin-top: 18px; }
+  .file { font: 12px/1 ui-monospace, Consolas, monospace; color: var(--muted); margin: 14px 0 -6px; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+        overflow-x: auto; font: 13.5px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.92em; }
+  p code, li code, td code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  .pitfall { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  .pitfall b { color: var(--warn); }
+  .tip { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="meta">Bài 06 · 11/11/2026 · Thời gian đọc ~20 phút · <a href="../index.html">← Mục lục</a></p>
+<h1>Dashboard API và gắn nhãn bằng từ khóa</h1>
+<p class="lead">Đợt 2 làm “cửa nhập hàng”. Đợt 3 làm hai việc còn lại để có <b>đường đi trọn vẹn từ cào tới dashboard</b>:
+(1) lệnh <code>label_data</code> đọc review và tự gắn nhãn “chê quảng cáo”, “hay văng app”… bằng từ khóa;
+(2) <code>GET /api/dashboard/</code> trả JSON đúng hình dạng mà Next.js đang dùng với dữ liệu giả.</p>
+
+<nav class="toc">
+  <b>Mục lục</b>
+  <ol>
+    <li><a href="#lam-gi">Hôm nay làm gì & cách chạy</a></li>
+    <li><a href="#ban-do-file">Bản đồ file</a></li>
+    <li><a href="#kien-thuc">Kiến thức chính (7 khái niệm)</a></li>
+    <li><a href="#vi-sao">Vì sao chọn cách này</a></li>
+    <li><a href="#tu-kiem-tra">Tự kiểm tra</a></li>
+    <li><a href="#doc-them">Đọc thêm</a></li>
+  </ol>
+</nav>
+
+<h2 id="lam-gi">1. Hôm nay làm gì</h2>
+<p>Luồng dữ liệu giờ đã đủ các khúc (chỉ còn thiếu extension ở đầu và frontend gọi API ở cuối):</p>
+<pre><code>extension ──POST──▶ /api/ingest/app/, /api/ingest/reviews/     (đợt 2)
+                         │
+               manage.py label_data                                (đợt 3)
+                         │   gán domain cho app, pain point + mong muốn cho review
+                         ▼
+Next.js  ◀──GET─── /api/dashboard/                                  (đợt 3)</code></pre>
+<p>Chạy test (90 test, đều xanh) và các lệnh mới:</p>
+<pre><code>cd backend
+.venv/Scripts/python -m pytest
+.venv/Scripts/python manage.py label_data            # gắn nhãn phần chưa gắn
+.venv/Scripts/python manage.py label_data --relabel  # gắn lại tất cả (trừ nhãn sửa tay)
+.venv/Scripts/python manage.py sample_labels --n 50  # in 50 review để chấm đúng/sai
+.venv/Scripts/python manage.py runserver
+# mở http://localhost:8000/api/dashboard/?include_foreign=1</code></pre>
+<p>Đã thử tay cả đường đi: gửi 1 app + 3 review bằng <code>curl</code> → gửi lại thì nhận <code>duplicates: 3</code> →
+<code>label_data</code> gán lĩnh vực <code>pdf</code> và nhãn <code>ads</code>, <code>crash</code>, <code>paywall</code> + mong muốn <code>offline</code> →
+dashboard hiện đủ (chỉ khi <code>?include_foreign=1</code>, vì tài khoản developer đó chưa được gán công ty Việt).</p>
+<p class="tip">Trên Git Bash ở Windows, gõ tiếng Việt thẳng trong <code>curl -d '...'</code> sẽ bị sai mã hóa (lỗi “can't decode byte”). Ghi JSON ra file UTF-8 rồi dùng <code>--data-binary @file.json</code>.</p>
+
+<h2 id="ban-do-file">2. Bản đồ file</h2>
+<pre><code>backend/market/
+  services/dashboard.py      (mới)  build_dashboard_data — dựng dict DashboardData
+  labeling/                  (mới)  hàm thuần, KHÔNG đụng database
+    text.py                         normalize (bỏ dấu, chữ thường), contains_keyword (ranh giới từ)
+    rules.py                        label_review, label_app_domain
+  services/labeling.py       (mới)  chạy labeling/ trên database theo lô 500 review
+  management/commands/       (mới)
+    label_data.py                   lệnh gắn nhãn, in app chưa khớp lĩnh vực
+    sample_labels.py                lệnh in mẫu ngẫu nhiên để chấm tay
+  api/views.py, api/urls.py  (sửa)  thêm GET /api/dashboard/
+backend/tests/
+  test_dashboard.py (12 test) · test_labeling.py (12 test) · test_commands.py (9 test)</code></pre>
+
+<h2 id="kien-thuc">3. Kiến thức chính</h2>
+
+<div class="concept">
+<h3>3.1. API là một “hợp đồng”: khớp từng tên trường với <code>types.ts</code></h3>
+<p>Frontend đã chạy với dữ liệu giả có hình dạng <code>DashboardData</code>. Nếu backend trả đúng hình dạng đó thì frontend không phải sửa gì.
+Nên mình viết hàm <code>_serialize_app</code> chép tay từng trường (Python dùng <code>snake_case</code>, JSON dùng <code>camelCase</code>),
+và test kiểm <b>tập khóa</b> ở mọi cấp. Lỡ gõ <code>offersIap</code> thay vì <code>offersIAP</code> là test đỏ ngay.</p>
+<p class="file">market/services/dashboard.py</p>
+<pre><code>def _serialize_app(app: App) -> dict:
+    histogram = app.star_histogram
+    has_histogram = len(histogram) >= 2
+    return {
+        "id": app.id,
+        "companyId": _company_id_of(app),
+        "lowStarRatio": app.low_star_ratio,
+        "oneStarRatings": histogram[0] if has_histogram else 0,
+        "twoStarRatings": histogram[1] if has_histogram else 0,
+        "offersIAP": app.offers_iap,
+        ...
+    }</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> test chỉ kiểm “có trường X” mà không kiểm “không có trường thừa”. Dùng <code>set(keys) == EXPECTED_KEYS</code> để bắt cả hai.</p>
+</div>
+
+<div class="concept">
+<h3>3.2. Lỗi N+1 và cách đếm số truy vấn trong test</h3>
+<p>“N+1” là khi bạn lấy 100 app bằng 1 truy vấn, rồi trong vòng lặp hỏi <code>app.developer_account.company</code> — mỗi app thêm 1–2 truy vấn nữa.
+Code vẫn đúng, chỉ chậm dần khi dữ liệu nhiều, nên rất khó thấy. <code>select_related</code> gộp bằng JOIN ngay từ đầu.
+Để chắc chắn, test dùng fixture <code>django_assert_max_num_queries</code>: 5 app × 5 review mà quá 12 truy vấn là đỏ.</p>
+<p class="file">market/services/dashboard.py · tests/test_dashboard.py</p>
+<pre><code>candidates = App.objects.filter(skipped_reason="", domain__isnull=False).select_related(
+    "developer_account__company"   # __ đi xuyên quan hệ: app → developer → company
+)
+
+with django_assert_max_num_queries(12):
+    data = get_dashboard(client)</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> <code>select_related</code> chỉ dùng cho ForeignKey (quan hệ “một”). Quan hệ “nhiều” (ManyToMany như <code>pain_points</code>) phải dùng <code>prefetch_related</code> hoặc cách ở mục 3.3.</p>
+</div>
+
+<div class="concept">
+<h3>3.3. Đọc thẳng bảng trung gian của ManyToMany</h3>
+<p>Quan hệ nhiều-nhiều review ↔ pain point được Django lưu trong một bảng ẩn có 2 cột <code>review_id</code>, <code>painpoint_id</code>.
+Truy cập bảng đó bằng <code>Review.pain_points.through</code>. Ở dashboard, mình đọc bảng này <b>một lần</b> rồi gom thành dict
+<code>{review_id: [pain_id, ...]}</code>. Lý do không dùng <code>prefetch_related</code>: nó nhét id của <b>mọi</b> review vào một câu
+<code>IN (...)</code>, mà SQLite giới hạn khoảng 32.000 tham số/câu — 40 app × 1.000 review là vượt.</p>
+<p class="file">market/services/dashboard.py — _pain_point_ids_by_review</p>
+<pre><code>links = (
+    Review.pain_points.through.objects.filter(review__app_id__in=app_ids, review__labeled_at__isnull=False)
+    .order_by("painpoint__order")
+    .values_list("review_id", "painpoint_id")
+)
+pain_ids_by_review: dict[str, list[str]] = defaultdict(list)
+for review_id, pain_point_id in links:
+    pain_ids_by_review[review_id].append(pain_point_id)</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> dùng dict thường rồi gọi <code>d[review_id]</code> cho review không có nhãn nào → <code>KeyError</code>. <code>defaultdict(list)</code> tự trả list rỗng.</p>
+</div>
+
+<div class="concept">
+<h3>3.4. Chuẩn hóa chữ: bỏ dấu tiếng Việt bằng Unicode NFD (và khi nào KHÔNG nên bỏ)</h3>
+<p>Người dùng gõ “QUANG CAO QUA NHIEU”, từ khóa là “quảng cáo”. Để so được, đưa cả hai về cùng dạng: chữ thường, không dấu.
+Mẹo: dạng Unicode <b>NFD</b> tách “ả” thành “a” + “dấu hỏi” (một ký tự “combining” riêng). Bỏ các ký tự combining là hết dấu.
+Riêng “đ” là một chữ riêng, không tách được, nên đổi tay.</p>
+<p class="file">market/labeling/text.py</p>
+<pre><code>def normalize(text: str) -> str:
+    decomposed = unicodedata.normalize("NFD", text.lower())
+    without_marks = "".join(char for char in decomposed if not unicodedata.combining(char))
+    without_marks = without_marks.replace("đ", "d")
+    return " ".join(without_marks.split())   # gộp mọi khoảng trắng / xuống dòng thành 1 dấu cách
+
+normalize("  Quảng   CÁO  Đầy\nmàn hình ")  # → "quang cao day man hinh"</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp — và đã dính thật:</b> nếu lúc nào cũng bỏ dấu thì từ khác nghĩa thành một: “do” = “đơ”, “chấm” = “chậm”,
+“rồi” = “rối”, “mở” = “mờ”. Câu “Mình chấm 1 sao vì quảng cáo” bị gắn thêm nhãn “Chậm”. Reviewer cuối nhánh phát hiện, và cách sửa là:</p>
+<p class="file">market/labeling/text.py — contains_keyword</p>
+<pre><code>if has_diacritics(prepared_text):          # người viết gõ có dấu → so CÓ dấu
+    prepared_keyword = fold_case(keyword)  # "chậm" ≠ "chấm"
+else:                                       # gõ không dấu → đành bỏ dấu cả từ khóa
+    prepared_keyword = normalize(keyword)  # "cham qua" vẫn khớp "chậm"</code></pre>
+<p>Review gõ không dấu thì vẫn có thể nhầm (“toi go app do qc” → “đơ”), nhưng đó là số ít. Bài học: khi viết test, ngoài câu
+<b>phải khớp</b> hãy viết cả câu <b>không được khớp</b> bằng tiếng Việt đời thường (xem các test <code>test_seed_*</code> trong <code>tests/test_labeling.py</code>).</p>
+</div>
+
+<div class="concept">
+<h3>3.5. Ranh giới từ <code>\b</code> trong regex</h3>
+<p>Tìm chuỗi con thô thì “ads” khớp cả “downlo<b>ads</b>”. <code>\b</code> (word boundary) nghĩa là “ở đây phải là chỗ bắt đầu/kết thúc một từ”,
+nên <code>\bads\b</code> khớp “too many ads!” nhưng không khớp “downloads”. <code>re.escape</code> để từ khóa có ký tự đặc biệt như “c++” không bị hiểu là cú pháp regex.</p>
+<p class="file">market/labeling/text.py</p>
+<pre><code>pattern = r"\b" + re.escape(normalized_keyword) + r"\b"
+return re.search(pattern, normalized_text) is not None</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> quên chữ <code>r</code> trước chuỗi: <code>"\b"</code> trong Python thường là ký tự backspace, không phải ranh giới từ.</p>
+</div>
+
+<div class="concept">
+<h3>3.6. Hàm thuần tách khỏi database → dễ thay bằng AI sau này</h3>
+<p><code>labeling/rules.py</code> chỉ nhận chữ + danh sách nhãn <code>(id, keywords)</code> và trả id nhãn. Nó không biết database là gì.
+Lợi ích: test chạy không cần DB (nhanh), và khi có API key thì viết <code>label_review</code> phiên bản LLM cùng đầu vào/đầu ra là thay được.
+Phần “đọc DB, ghi DB” nằm riêng ở <code>services/labeling.py</code>.</p>
+<p class="file">market/labeling/rules.py</p>
+<pre><code>Label = tuple[str, list[str]]   # ("ads", ["quảng cáo", "ads"])
+
+def label_review(content, pain_labels, wish_labels) -> tuple[list[str], str | None]:
+    text = normalize(content)
+    pain_ids = []
+    for pain_id, keywords in pain_labels:
+        if matches_any(text, keywords):
+            pain_ids.append(pain_id)
+    ...</code></pre>
+<p>Chấm lĩnh vực app: từ khóa trong <b>tên</b> được 3 điểm, trong mô tả/thể loại được 1 điểm; lấy lĩnh vực điểm cao nhất, hòa thì lấy cái đứng trước (dùng <code>&gt;</code>, không dùng <code>&gt;=</code>).</p>
+<p class="pitfall"><b>Lỗi hay gặp (hạn chế của cách từ khóa):</b> “không có quảng cáo, rất thích” vẫn bị gắn nhãn <code>ads</code> vì không hiểu phủ định. Vì vậy mới có lệnh <code>sample_labels</code> để chấm tay.</p>
+</div>
+
+<div class="concept">
+<h3>3.7. Lệnh <code>manage.py</code> tự viết, và ghi theo lô</h3>
+<p>Mỗi file trong <code>market/management/commands/</code> là một lệnh; tên file là tên lệnh. Class <code>Command</code> có
+<code>add_arguments</code> (khai báo tham số như <code>--relabel</code>) và <code>handle</code> (việc cần làm). In ra bằng <code>self.stdout.write</code> — để test hứng được bằng <code>StringIO</code>.</p>
+<p>Gắn nhãn 20.000 review mà mỗi review gọi <code>.pain_points.set()</code> + <code>.save()</code> là ~60.000 câu SQL. Ghi theo lô 500 chỉ cần 3 câu mỗi lô:</p>
+<p class="file">market/services/labeling.py — _label_review_batch</p>
+<pre><code>with transaction.atomic():
+    # Xóa nhãn cũ của lô rồi ghi nhãn mới (quan trọng khi chạy --relabel)
+    PainLink.objects.filter(review_id__in=batch_ids).delete()
+    PainLink.objects.bulk_create(new_links)
+    # bulk_update: cập nhật 3 cột cho cả lô bằng một câu UPDATE
+    Review.objects.bulk_update(batch, ["wish", "labeled_at", "label_source"])</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> dùng <code>print()</code> trong lệnh thay vì <code>self.stdout.write</code> → test không bắt được chữ in ra.</p>
+</div>
+
+<h2 id="vi-sao">4. Vì sao chọn cách này</h2>
+<table>
+  <tr><th>Quyết định</th><th>Lý do</th><th>Phương án đã bỏ</th></tr>
+  <tr><td>Dashboard chỉ trả app có lĩnh vực + review đã gắn nhãn</td>
+      <td>Không hiện dữ liệu dở dang (app “không lĩnh vực” làm vỡ biểu đồ theo lĩnh vực)</td>
+      <td>Trả hết, để frontend lọc — frontend phải biết thêm quy tắc</td></tr>
+  <tr><td>App chưa có công ty dùng <code>companyId = "dev:&lt;id&gt;"</code>, và luôn có mục tương ứng trong <code>companies</code></td>
+      <td>Mọi <code>companyId</code> đều tra được tên; app nước ngoài vẫn nhóm được theo tài khoản</td>
+      <td>Để <code>companyId</code> rỗng — frontend phải xử lý trường hợp đặc biệt</td></tr>
+  <tr><td>Review không khớp nhãn nào vẫn đặt <code>labeled_at</code></td>
+      <td>Nó vẫn là một lời chê 1–2★ thật, phải được đếm; và lần sau không xử lý lại</td>
+      <td>Để <code>labeled_at</code> rỗng — review đó biến mất khỏi dashboard</td></tr>
+  <tr><td>Gắn nhãn chạy bằng lệnh riêng, không chạy khi nhận review</td>
+      <td>Nhận review phải nhanh; sửa từ khóa trong admin rồi <code>--relabel</code> là áp dụng lại cho tất cả</td>
+      <td>Gắn nhãn ngay trong <code>ingest/reviews/</code></td></tr>
+  <tr><td>Từ khóa trước, LLM sau</td>
+      <td>Miễn phí, chạy ngay, dễ hiểu; chấm bằng <code>sample_labels</code>, dưới 70% đúng thì mới cần AI</td>
+      <td>Dùng LLM ngay — cần API key và tốn tiền</td></tr>
+</table>
+
+<h2 id="tu-kiem-tra">5. Tự kiểm tra</h2>
+<details><summary>1. Review “Too many downloads required” có bị gắn nhãn <code>ads</code> không? Vì sao?</summary>
+<p>Không. Từ khóa “ads” được khớp với <code>\bads\b</code>; trong “downloads” chữ “ads” không đứng ở ranh giới từ.</p></details>
+<details><summary>2. App “PDF Scanner”, mô tả “scan documents”. Lĩnh vực <code>pdf</code> có từ khóa ["pdf", "document"], <code>scanner</code> có ["scan", "scanner"]. Chọn lĩnh vực nào?</summary>
+<p><b>scanner</b>. pdf: tên khớp “pdf” → 3 điểm; mô tả có “documents” (số nhiều) nên không khớp ranh giới từ “document”. scanner: tên khớp “scanner” (3) + mô tả khớp “scan” (1) → 4 điểm. Muốn khớp số nhiều thì thêm “documents” vào từ khóa.</p></details>
+<details><summary>3. Bạn sửa tay nhãn một review trong admin, rồi chạy <code>label_data --relabel</code>. Nhãn có bị mất không?</summary>
+<p>Không. Admin đặt <code>label_source = "manual"</code>, và <code>label_reviews</code> loại các review đó bằng <code>.exclude(label_source="manual")</code>.</p></details>
+<details><summary>4. Vì sao <code>meta.updatedAt</code> phải đổi sang giờ Việt Nam trước khi lấy ngày?</summary>
+<p>Database lưu giờ UTC. Lần cào xong lúc 03:00 sáng 6/11 giờ VN là 20:00 ngày 5/11 UTC — lấy ngày thẳng sẽ ra 5/11, sai một ngày. (Test <code>test_updated_at_from_latest_finished_run</code>.)</p></details>
+<details><summary>5. Bài tập: thêm cờ <code>--app &lt;appId&gt;</code> cho <code>sample_labels</code> để chỉ in review của một app.</summary>
+<p>Gợi ý: <code>parser.add_argument("--app")</code>, rồi trong <code>handle</code> nếu <code>options["app"]</code> có giá trị thì thêm <code>.filter(app_id=...)</code> vào truy vấn <code>labeled_ids</code>. Viết test trước: 2 app, mỗi app 2 review, <code>--app</code> một app → chỉ thấy appId đó.</p></details>
+
+<h2 id="doc-them">6. Đọc thêm</h2>
+<ul>
+  <li><a href="https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-related">Django — <code>select_related</code> / <code>prefetch_related</code></a></li>
+  <li><a href="https://docs.djangoproject.com/en/5.2/howto/custom-management-commands/">Django — Viết lệnh <code>manage.py</code> riêng</a></li>
+  <li><a href="https://docs.python.org/3/library/unicodedata.html#unicodedata.normalize">Python — <code>unicodedata.normalize</code></a> và <a href="https://docs.python.org/3/library/re.html">Python — <code>re</code> (mục <code>\b</code>)</a></li>
+  <li><a href="https://pytest-django.readthedocs.io/en/latest/helpers.html#django-assert-max-num-queries">pytest-django — <code>django_assert_max_num_queries</code></a></li>
+</ul>
+
+</main>
+</body>
+</html>
