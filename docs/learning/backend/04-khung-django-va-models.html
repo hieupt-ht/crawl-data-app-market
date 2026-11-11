@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài 04 — Khung Django và các bảng dữ liệu</title>
+<style>
+  :root {
+    --ink: #1a1a19; --ink-2: #52514e; --muted: #898781; --line: #e1e0d9;
+    --page: #f7f7f4; --card: #ffffff; --accent: #2a78d6; --accent-soft: #eaf2fc;
+    --code-bg: #f3f2ee; --warn: #b35a00; --warn-soft: #fff4e5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.7 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 30px; line-height: 1.25; margin: 0 0 6px; }
+  h2 { font-size: 22px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 28px 0 8px; }
+  .lead { color: var(--ink-2); font-size: 17px; }
+  .meta { color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+  nav.toc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 20px; margin: 24px 0; }
+  nav.toc ol { margin: 6px 0; padding-left: 20px; }
+  .concept { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 22px 14px; margin: 18px 0; }
+  .concept h3 { margin-top: 18px; }
+  .file { font: 12px/1 ui-monospace, Consolas, monospace; color: var(--muted); margin: 14px 0 -6px; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+        overflow-x: auto; font: 13.5px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.92em; }
+  p code, li code, td code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  .pitfall { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  .pitfall b { color: var(--warn); }
+  .tip { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 15px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="meta">Bài 04 · 11/11/2026 · Thời gian đọc ~20 phút · <a href="../index.html">← Mục lục</a></p>
+<h1>Khung Django và các bảng dữ liệu</h1>
+<p class="lead">Bài backend đầu tiên. Hôm nay mình dựng “cái nhà kho” cho dữ liệu: một project Django chạy được, các bảng để lưu
+công ty, app, review, nhãn, cùng trang admin để xem và sửa dữ liệu bằng tay. Chưa có dữ liệu cào thật, cũng chưa có API cho extension.
+Hai phần đó để sang đợt sau.</p>
+
+<nav class="toc">
+  <b>Mục lục</b>
+  <ol>
+    <li><a href="#lam-gi">Hôm nay làm gì & cách chạy</a></li>
+    <li><a href="#ban-do-file">Bản đồ file</a></li>
+    <li><a href="#kien-thuc">Kiến thức chính (8 khái niệm)</a></li>
+    <li><a href="#vi-sao">Vì sao chọn cách này</a></li>
+    <li><a href="#tu-kiem-tra">Tự kiểm tra</a></li>
+    <li><a href="#doc-them">Đọc thêm</a></li>
+  </ol>
+</nav>
+
+<!-- ===================================================================== -->
+<h2 id="lam-gi">1. Hôm nay làm gì</h2>
+<ul>
+  <li>Chuyển git ra thư mục gốc để quản lý chung <code>frontend/</code> và <code>backend/</code>. Backend làm trên nhánh <code>feat/backend-django</code>.</li>
+  <li>Tạo project Django (<code>config/</code>) và một Django app tên <code>market</code>.</li>
+  <li>Viết 9 bảng: lĩnh vực, nhóm pain, pain point, mong muốn, công ty, tài khoản developer, app, review, lần cào.</li>
+  <li>Nạp sẵn bộ nhãn (8 lĩnh vực, 10 pain point, 15 mong muốn, kèm từ khóa) bằng <i>data migration</i>.</li>
+  <li>Làm trang admin. Bạn sửa nhãn bằng tay thì nhãn được đánh dấu <code>manual</code>, để máy không ghi đè lên.</li>
+  <li>13 test tự động, tất cả đều qua.</li>
+</ul>
+
+<h3>Chạy thử</h3>
+<pre><code>cd backend
+.venv/Scripts/python manage.py migrate            # tạo db.sqlite3 + nạp nhãn
+.venv/Scripts/python manage.py createsuperuser    # tạo tài khoản admin (1 lần)
+.venv/Scripts/python manage.py runserver          # mở http://localhost:8000/admin/
+.venv/Scripts/python -m pytest                    # chạy 13 test</code></pre>
+<p>Mở <code>http://localhost:8000/api/health/</code> sẽ thấy <code>{"status": "ok"}</code>. Sau này extension gọi đường dẫn này để biết Django đã bật chưa.</p>
+
+<!-- ===================================================================== -->
+<h2 id="ban-do-file">2. Bản đồ file</h2>
+<pre><code>.gitignore                    bỏ qua node_modules, .venv, db.sqlite3, .env… cho cả dự án
+backend/
+├── requirements.txt          danh sách thư viện Python + phiên bản
+├── pytest.ini                cho pytest biết dùng settings nào
+├── manage.py                 "bảng điều khiển" của Django (migrate, runserver…)
+├── README.md                 hướng dẫn chạy bằng tiếng Việt
+├── config/
+│   ├── settings.py           cấu hình: database, CORS, DRF, múi giờ
+│   └── urls.py               gắn /admin/ và /api/
+├── market/
+│   ├── models.py             ★ 9 bảng dữ liệu
+│   ├── taxonomy_seed.py      bộ nhãn khởi đầu + từ khóa
+│   ├── migrations/
+│   │   ├── 0001_initial.py       Django tự sinh từ models.py
+│   │   └── 0002_seed_taxonomy.py ★ nạp bộ nhãn vào database
+│   ├── admin.py              trang quản trị + quy tắc "sửa tay → manual"
+│   ├── services/
+│   │   ├── stars.py          tính % đánh giá 1–2★
+│   │   └── scope.py          app nào được tính trên dashboard
+│   └── api/
+│       ├── views.py          endpoint /api/health/
+│       └── urls.py
+└── tests/
+    ├── conftest.py           ★ "nhà máy" tạo dữ liệu test
+    ├── test_health.py
+    ├── test_models.py
+    └── test_admin.py</code></pre>
+
+<!-- ===================================================================== -->
+<h2 id="kien-thuc">3. Kiến thức chính</h2>
+
+<div class="concept">
+<h3>3.1. Project và app trong Django, môi trường ảo (venv)</h3>
+<p><b>Project</b> là cả “tòa nhà”: cấu hình chung, đường dẫn gốc. <b>App</b> là một “phòng” lo một mảng việc,
+ở đây là <code>market</code>, lo dữ liệu thị trường app. Dự án lớn có nhiều app, còn dự án mình nhỏ nên một app là đủ và dễ nắm.</p>
+<p><b>venv (virtual environment)</b> là một thư mục <code>.venv/</code> chứa Python và thư viện <i>riêng</i> cho dự án.
+Nhờ vậy dự án này dùng Django 5.2 mà không đụng tới dự án khác trên máy đang dùng phiên bản khác.</p>
+<p class="file">backend/requirements.txt</p>
+<pre><code>Django&gt;=5.2,&lt;5.3
+djangorestframework&gt;=3.16,&lt;3.17
+django-cors-headers&gt;=4.7,&lt;5</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> gõ <code>pip install</code> hay <code>python</code> trần, nên thư viện cài vào Python chung của máy thay vì <code>.venv</code>.
+Hãy luôn gọi <code>.venv/Scripts/python ...</code>, hoặc kích hoạt venv trước.</p>
+</div>
+
+<div class="concept">
+<h3>3.2. Model = một bảng trong database</h3>
+<p>Mỗi class trong <code>models.py</code> là một bảng, mỗi thuộc tính là một cột. Django tự viết câu SQL giúp bạn.
+Đây gọi là <b>ORM</b> (Object-Relational Mapping): làm việc với database bằng object Python thay vì viết SQL.</p>
+<p class="file">backend/market/models.py</p>
+<pre><code>class App(models.Model):
+    id = models.CharField(primary_key=True, max_length=255)      # "com.apero.pdfreader"
+    title = models.CharField(max_length=255)
+    developer_account = models.ForeignKey(DeveloperAccount, on_delete=models.PROTECT, related_name="apps")
+    min_installs = models.BigIntegerField()
+    # 5 số lượt chấm sao, phần tử [0] là 1★, [4] là 5★
+    star_histogram = models.JSONField(default=list)
+    domain = models.ForeignKey(Domain, null=True, blank=True, on_delete=models.SET_NULL)</code></pre>
+<p>Ba loại quan hệ mình dùng:</p>
+<table>
+  <tr><th>Loại</th><th>Ví dụ trong dự án</th><th>Nghĩa đời thường</th></tr>
+  <tr><td><code>ForeignKey</code> (n–1)</td><td>Review → App</td><td>nhiều review thuộc về một app</td></tr>
+  <tr><td><code>ManyToManyField</code> (n–n)</td><td>Review ↔ PainPoint</td><td>một review chê nhiều thứ, một thứ bị nhiều review chê</td></tr>
+  <tr><td><code>null=True</code> trên ForeignKey</td><td>App → Domain</td><td>app mới cào về chưa biết thuộc lĩnh vực nào</td></tr>
+</table>
+<p class="tip"><b>on_delete</b> nói chuyện gì xảy ra khi bản ghi “cha” bị xóa. <code>CASCADE</code>: xóa app thì xóa luôn review của nó.
+<code>PROTECT</code>: không cho xóa tài khoản developer khi còn app thuộc về nó. <code>SET_NULL</code>: xóa lĩnh vực thì app về trạng thái “chưa có lĩnh vực”.</p>
+<p class="pitfall"><b>Lỗi hay gặp:</b> sửa <code>models.py</code> rồi quên chạy <code>makemigrations</code> + <code>migrate</code>.
+Lúc đó database vẫn là bảng cũ, và báo lỗi kiểu “no such column”.</p>
+</div>
+
+<div class="concept">
+<h3>3.3. Chọn khóa chính khôn ngoan để chống trùng</h3>
+<p>Thường Django tự tạo cột <code>id</code> là số 1, 2, 3… Nhưng với review, mình dùng luôn <b>id review của Google</b> làm khóa chính.
+Vì vậy extension lỡ gửi một review hai lần (mạng lag, bấm cào lại) thì database tự nhận ra là trùng, không có bản thứ hai.</p>
+<p class="file">backend/market/models.py</p>
+<pre><code>class Review(models.Model):
+    """Một review 1–2★. Khóa chính là id review của Google nên gửi lại không bị trùng."""
+    id = models.CharField(primary_key=True, max_length=255)
+    app = models.ForeignKey(App, on_delete=models.CASCADE, related_name="reviews")
+    lang = models.CharField(max_length=2, choices=LANG_CHOICES)</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> dùng id tự tăng rồi phải tự viết code kiểm tra trùng bằng nội dung review. Cách đó vừa chậm vừa sai,
+vì hai người khác nhau có thể viết cùng một câu “quá nhiều quảng cáo”.</p>
+</div>
+
+<div class="concept">
+<h3>3.4. Migration và data migration</h3>
+<p><b>Migration</b> là file ghi lại “database thay đổi thế nào”, giống commit của git nhưng dành cho cấu trúc bảng.
+<code>makemigrations</code> so <code>models.py</code> với các migration cũ rồi sinh file mới. <code>migrate</code> chạy các file đó lên database.</p>
+<p><b>Data migration</b> là migration do mình tự viết để <i>thêm dữ liệu</i> thay vì đổi cấu trúc bảng. Mình dùng nó để nạp 8 lĩnh vực và 10 pain point.
+Lợi ích là database nào chạy <code>migrate</code> cũng có sẵn nhãn, kể cả database tạm mà pytest tạo ra khi chạy test.</p>
+<p class="file">backend/market/migrations/0002_seed_taxonomy.py</p>
+<pre><code>def seed_taxonomy(apps, schema_editor):
+    # Dùng apps.get_model thay vì import model trực tiếp: migration phải chạy với
+    # "phiên bản bảng" tại thời điểm migration này, không phải bản mới nhất trong models.py.
+    Domain = apps.get_model("market", "Domain")
+    for order, item in enumerate(DOMAINS):
+        Domain.objects.create(id=item["id"], name=item["name"], keywords=item["keywords"], order=order)</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> viết <code>from market.models import Domain</code> trong migration. Hôm nay vẫn chạy,
+nhưng vài tháng sau bạn thêm cột mới vào <code>Domain</code> thì migration cũ này sẽ hỏng khi chạy trên máy mới.</p>
+</div>
+
+<div class="concept">
+<h3>3.5. Trang admin và quy tắc “sửa tay thì máy không được ghi đè”</h3>
+<p>Django tặng sẵn trang <code>/admin/</code> để xem, thêm, sửa, xóa dữ liệu. Mình chỉ cần khai báo bảng nào hiện cột gì, lọc theo gì.
+Mình còn “chen” vào lúc bấm Lưu: nếu bạn đổi lĩnh vực của app thì đánh dấu <code>domain_source = "manual"</code>.
+Sau này lệnh gắn nhãn tự động thấy <code>manual</code> sẽ bỏ qua app đó, nên công sửa tay của bạn không bị mất.</p>
+<p class="file">backend/market/admin.py</p>
+<pre><code>@admin.register(App)
+class AppAdmin(admin.ModelAdmin):
+    list_filter = [MissingDomainFilter, "domain", "skipped_reason"]
+
+    def save_model(self, request, obj, form, change):
+        # form.changed_data = danh sách tên trường người dùng vừa sửa trong form
+        if "domain" in form.changed_data:
+            obj.domain_source = "manual"
+        super().save_model(request, obj, form, change)</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> quên gọi <code>super().save_model(...)</code> ở cuối. Khi đó mọi thứ trông như đã lưu nhưng thực ra không có gì được ghi vào database.</p>
+</div>
+
+<div class="concept">
+<h3>3.6. Hàm thuần trong <code>services/</code> và chuyện chia cho 0</h3>
+<p><b>Hàm thuần</b> là hàm chỉ nhận vào rồi trả ra, không đọc database, không sửa gì bên ngoài. Hàm như vậy test rất dễ, không cần dựng dữ liệu.
+Mình gom chúng vào <code>market/services/</code>, tách khỏi view, giống như frontend gom tính toán vào <code>lib/analytics.ts</code>.</p>
+<p class="file">backend/market/services/stars.py</p>
+<pre><code>def low_star_ratio(histogram: list[int]) -&gt; float:
+    """Tỉ lệ lượt chấm 1–2★ trên tổng. Ví dụ [20, 10, 10, 20, 40] -&gt; 0.3."""
+    if len(histogram) != STAR_LEVELS:
+        return 0.0
+    total = sum(histogram)
+    if total == 0:
+        return 0.0
+    return round((histogram[0] + histogram[1]) / total, 4)</code></pre>
+<p>Để ý cách viết <b>return sớm</b>: loại các trường hợp xấu trước, nên dòng tính toán chính ở cuối không phải lồng trong <code>if</code> nào.</p>
+<p class="pitfall"><b>Lỗi hay gặp:</b> app mới lên chưa ai chấm sao, <code>sum = 0</code>, chương trình dừng với <code>ZeroDivisionError</code> giữa lúc đang cào. Luôn hỏi “nếu dữ liệu rỗng thì sao?”.</p>
+</div>
+
+<div class="concept">
+<h3>3.7. pytest, fixture “nhà máy” và TDD</h3>
+<p>Mình viết <b>test trước, code sau</b> (TDD). Chạy test thấy đỏ (vì code chưa có), viết code, chạy lại thấy xanh.
+Thấy đỏ trước là bằng chứng test thật sự kiểm tra được điều gì đó.</p>
+<p><b>Fixture</b> là thứ pytest tự chuẩn bị rồi đưa vào test qua tên tham số. Fixture <code>db</code> cho phép test dùng database tạm.
+<code>make_app</code> là fixture “nhà máy” do mình viết: tạo app với giá trị mặc định hợp lệ, test chỉ cần đổi đúng chỗ nó quan tâm.</p>
+<p class="file">backend/tests/test_models.py</p>
+<pre><code>def test_scope(make_app, make_developer):
+    assert is_in_scope(make_app()) is True
+
+    foreign = make_developer(play_developer_id="adobe", status="foreign", company=None)
+    assert is_in_scope(make_app(id="com.adobe.reader", developer_account=foreign)) is False</code></pre>
+<p class="pitfall"><b>Lỗi hay gặp:</b> mỗi test tự tạo đủ 15 trường của app. Khi thêm một cột bắt buộc mới, bạn phải sửa 30 test.
+Có “nhà máy” thì chỉ sửa một chỗ trong <code>conftest.py</code>.</p>
+</div>
+
+<div class="concept">
+<h3>3.8. API đầu tiên với DRF, CORS và CSRF</h3>
+<p><b>Django REST Framework (DRF)</b> giúp viết API trả JSON gọn hơn Django thuần. Endpoint đầu tiên chỉ có 3 dòng:</p>
+<p class="file">backend/market/api/views.py</p>
+<pre><code>@api_view(["GET"])
+def health(request: Request) -&gt; Response:
+    """Trả {"status": "ok"} — extension gọi để biết Django đã bật hay chưa."""
+    return Response({"status": "ok"})</code></pre>
+<ul>
+  <li><b>CORS</b>: trình duyệt mặc định chặn trang <code>localhost:3000</code> gọi sang <code>localhost:8000</code>, vì khác “nguồn gốc” (origin).
+    Thư viện <code>django-cors-headers</code> báo cho trình duyệt rằng hai nguồn này được phép gọi nhau.</li>
+  <li><b>CSRF</b>: Django mặc định đòi một token chống giả mạo cho mọi request POST. Mình tắt đăng nhập trong DRF,
+    nên DRF không đòi token, và extension POST dữ liệu được. Cách này chỉ an toàn vì backend chạy trên máy cá nhân.</li>
+</ul>
+<p class="pitfall"><b>Lỗi hay gặp:</b> đặt <code>CorsMiddleware</code> dưới <code>CommonMiddleware</code>. Khi đó header CORS không kịp gắn vào response, và trình duyệt vẫn báo lỗi CORS dù bạn đã cài thư viện.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="vi-sao">4. Vì sao chọn cách này</h2>
+<table>
+  <tr><th>Quyết định</th><th>Lý do</th><th>Phương án đã bỏ</th></tr>
+  <tr><td>SQLite, sau này chuyển PostgreSQL</td><td>Một file, không cần cài. Đổi sang PostgreSQL chỉ phải sửa <code>DATABASES</code> trong settings.</td><td>MongoDB: dữ liệu có quan hệ chặt, mà Django hỗ trợ SQL tốt nhất.</td></tr>
+  <tr><td>Một Django app <code>market</code></td><td>Dự án nhỏ, một chỗ là đủ để đọc hết.</td><td>Tách 4 app (ingest, dashboard, labeling…): quá sớm, thêm khái niệm thừa.</td></tr>
+  <tr><td>Từ khóa nằm trong database</td><td>Gặp app thật không khớp 8 lĩnh vực cũ thì thêm lĩnh vực mới trong admin, không phải sửa code.</td><td>Viết cứng từ khóa trong code Python.</td></tr>
+  <tr><td>Tách <code>Company</code> và <code>DeveloperAccount</code></td><td>Một studio có nhiều tài khoản đăng app trên Google Play.</td><td>Một bảng “studio” = tên tài khoản: dashboard sẽ tách Apero thành 3 công ty.</td></tr>
+  <tr><td>Cột <code>raw_payload</code> (JSON)</td><td>Giữ nguyên bản gốc extension gửi lên, phòng khi sau này cần thêm trường.</td><td>Chỉ lưu các cột đã biết: muốn có trường mới thì phải cào lại.</td></tr>
+  <tr><td>Bỏ từ khóa “sai”, “không thể”</td><td>Quá phổ biến, gần như review nào cũng khớp, nên nhãn mất ý nghĩa.</td><td>Giữ lại cho “bắt được nhiều”.</td></tr>
+</table>
+
+<!-- ===================================================================== -->
+<h2 id="tu-kiem-tra">5. Tự kiểm tra</h2>
+
+<details>
+  <summary>1. Bạn thêm cột <code>icon_url</code> vào model <code>App</code>. Cần chạy những lệnh gì để database có cột đó?</summary>
+  <p><code>.venv/Scripts/python manage.py makemigrations</code> (sinh file migration <code>0003_...</code>) rồi <code>.venv/Scripts/python manage.py migrate</code> (áp vào database).
+  Nhớ commit cả file migration mới.</p>
+</details>
+
+<details>
+  <summary>2. Vì sao <code>Review.id</code> lấy id của Google mà không để Django tự đánh số 1, 2, 3?</summary>
+  <p>Để chống trùng: gửi lại cùng review thì khóa chính trùng, database tự biết đã có. Nếu tự đánh số thì mỗi lần gửi lại sẽ thành một dòng mới.</p>
+</details>
+
+<details>
+  <summary>3. Trong admin bạn đổi lĩnh vực của app “Flashlight Pro” từ trống sang “Launcher”. Lệnh gắn nhãn tự động chạy sau đó có đổi lại không? Vì sao?</summary>
+  <p>Không. <code>save_model</code> trong <code>AppAdmin</code> đã đặt <code>domain_source = "manual"</code>, và lệnh tự động (làm ở đợt sau) bỏ qua mọi app có nguồn <code>manual</code>.</p>
+</details>
+
+<details>
+  <summary>4. Viết thêm một test: app có biểu đồ sao <code>[0, 0, 0, 0, 10]</code> thì <code>low_star_ratio</code> bằng bao nhiêu?</summary>
+  <pre><code>def test_low_star_ratio_all_five_star():
+    assert low_star_ratio([0, 0, 0, 0, 10]) == 0.0</code></pre>
+  <p>Tổng là 10 (khác 0), lượt 1–2★ là 0, nên 0 / 10 = 0.0. Bạn đặt test vào <code>tests/test_models.py</code> rồi chạy <code>.venv/Scripts/python -m pytest</code>.</p>
+</details>
+
+<details>
+  <summary>5. Một app do Adobe đăng. Cần những điều kiện gì để <code>is_in_scope</code> trả <code>True</code>?</summary>
+  <p>Tài khoản developer phải có <code>status = "assigned"</code>, có <code>company</code>, và <code>company.is_vietnamese = True</code>.
+  Adobe không phải công ty Việt nên sẽ là <code>False</code>. App vẫn được lưu, chỉ là không hiện trên dashboard.</p>
+</details>
+
+<!-- ===================================================================== -->
+<h2 id="doc-them">6. Đọc thêm</h2>
+<ul>
+  <li><a href="https://docs.djangoproject.com/en/5.2/intro/tutorial02/">Django tutorial phần 2: Models và trang admin</a></li>
+  <li><a href="https://docs.djangoproject.com/en/5.2/topics/migrations/#data-migrations">Django: Data migrations</a></li>
+  <li><a href="https://www.django-rest-framework.org/tutorial/2-requests-and-responses/">DRF tutorial: Requests and Responses</a></li>
+  <li><a href="https://pytest-django.readthedocs.io/en/latest/helpers.html">pytest-django: fixture <code>db</code>, <code>client</code></a></li>
+</ul>
+
+</main>
+</body>
+</html>
