@@ -13,7 +13,7 @@ from rest_framework.response import Response
 
 from market.models import Company, CrawlRun, DeveloperAccount
 from market.services.crawl_runs import get_crawl_state, update_crawl_run
-from market.services.ingest import upsert_app
+from market.services.ingest import add_reviews, upsert_app
 from market.services.scope import is_in_scope
 
 from .serializers import (
@@ -24,6 +24,7 @@ from .serializers import (
     DeveloperAccountSerializer,
     DeveloperAssignmentSerializer,
     IngestAppSerializer,
+    IngestReviewsSerializer,
 )
 
 
@@ -123,3 +124,13 @@ def ingest_app(request: Request) -> Response:
             "developer_status": app.developer_account.status,
         }
     )
+
+
+@api_view(["POST"])
+def ingest_reviews(request: Request) -> Response:
+    """Lưu một đợt review (≤100); review đã có thì bỏ qua và đếm vào "duplicates"."""
+    serializer = IngestReviewsSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    created, duplicates = add_reviews(data["app"], data["lang"], data["reviews"])
+    return Response({"created": created, "duplicates": duplicates})

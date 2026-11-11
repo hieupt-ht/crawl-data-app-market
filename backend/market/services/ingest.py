@@ -9,7 +9,7 @@ Nguyên tắc: cào lại bao nhiêu lần cũng được, KHÔNG làm mất nh�
 from django.db import transaction
 from django.utils import timezone
 
-from market.models import App, DeveloperAccount
+from market.models import App, DeveloperAccount, Review
 from market.services.scope import skipped_reason_for
 from market.services.stars import low_star_ratio, star_counts_from_percentages
 
@@ -81,3 +81,42 @@ def upsert_app(data: dict, developer: dict, raw_payload: dict | None = None) -> 
         crawled_fields["developer_account"] = account
         app, _ = App.objects.update_or_create(id=data["id"], defaults=crawled_fields)
     return app
+
+
+def add_reviews(app: App, lang: str, reviews: list[dict]) -> tuple[int, int]:
+    """
+    Thêm một đợt review (đã qua serializer) cho app ở lượt cào `lang`. Trả (số tạo mới, số trùng).
+
+    Review "trùng" = id đã có trong database ở BẤT KỲ lượt nào, hoặc lặp lại ngay trong đợt này.
+    Gặp trùng thì giữ bản thấy đầu tiên, nên gửi lại cùng đợt bao nhiêu lần cũng không sinh bản sao,
+    và review đã lưu ở lượt "vi" vẫn giữ lang "vi" khi lượt "en" gặp lại nó.
+    """
+    incoming_ids = [item["id"] for item in reviews]
+    # Một truy vấn lấy các id đã có, thay vì hỏi database từng review một
+    existing_ids = set(Review.objects.filter(id__in=incoming_ids).values_list("id", flat=True))
+
+    new_reviews = []
+    seen_ids = set(existing_ids)
+    for item in reviews:
+        if item["id"] in seen_ids:
+            continue
+        seen_ids.add(item["id"])
+        new_reviews.append(
+            Review(
+                id=item["id"],
+                app=app,
+                lang=lang,
+                score=item["score"],
+                date=item["date"],
+                content=item["content"],
+                thumbs_up=item.get("thumbs_up", 0),
+                raw_payload=item.get("raw_payload", {}),
+            )
+        )
+
+    # bulk_create: ghi tất cả review mới bằng một câu lệnh INSERT, nhanh hơn nhiều so với .save() từng cái
+    with transaction.atomic():
+        Review.objects.bulk_create(new_reviews)
+
+    created_count = len(new_reviews)
+    return created_count, len(reviews) - created_count

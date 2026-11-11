@@ -19,4 +19,5 @@ urlpatterns = [
     path("crawl-runs/<int:run_id>/", views.crawl_run_update, name="crawl-run-update"),
     path("crawl-state/", views.crawl_state, name="crawl-state"),
     path("ingest/app/", views.ingest_app, name="ingest-app"),
+    path("ingest/reviews/", views.ingest_reviews, name="ingest-reviews"),
 ]
