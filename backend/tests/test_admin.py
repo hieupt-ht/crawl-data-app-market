@@ -4,6 +4,8 @@ from django.contrib.admin.sites import AdminSite
 
 from market.admin import AppAdmin, ReviewAdmin
 from market.models import App, Review
+from market.services.dashboard import build_dashboard_data
+from market.services.labeling import label_reviews
 
 
 class FakeForm:
@@ -34,3 +36,15 @@ def test_changing_review_labels_in_admin_marks_manual(make_app, make_review):
     ReviewAdmin(Review, AdminSite()).save_model(request=None, obj=review, form=FakeForm(["pain_points"]), change=True)
     review.refresh_from_db()
     assert review.label_source == "manual"
+
+
+def test_manual_label_on_unlabeled_review_reaches_dashboard(make_app, make_review):
+    """Review chưa từng qua label_data, sửa nhãn tay trong admin → vẫn phải lên dashboard (lỗi I1 của review cuối nhánh)."""
+    review = make_review(make_app(), id="hand-labeled", labeled_at=None)
+    review.wish_id = "offline"
+    ReviewAdmin(Review, AdminSite()).save_model(request=None, obj=review, form=FakeForm(["wish"]), change=True)
+    label_reviews()
+
+    review.refresh_from_db()
+    assert review.labeled_at is not None
+    assert "hand-labeled" in [item["id"] for item in build_dashboard_data()["reviews"]]

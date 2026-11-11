@@ -9,6 +9,7 @@ admin.py — Cấu hình trang quản trị /admin/.
 """
 
 from django.contrib import admin
+from django.utils import timezone
 
 from .models import App, Company, CrawlRun, DeveloperAccount, Domain, PainPoint, Review, Wish
 
@@ -85,6 +86,9 @@ class ReviewAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if REVIEW_LABEL_FIELDS & set(form.changed_data):
             obj.label_source = "manual"
+            # Đặt luôn labeled_at: review chưa từng qua label_data mà sửa tay thì vẫn phải lên dashboard
+            # (dashboard chỉ lấy review có labeled_at, còn label_data bỏ qua review "manual")
+            obj.labeled_at = timezone.now()
         super().save_model(request, obj, form, change)
 
 
